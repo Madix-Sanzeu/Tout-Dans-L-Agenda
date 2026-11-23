@@ -43,6 +43,19 @@ TDA.config = {
      quand on crée une tâche : dans RAPPEL_PAR_DEFAUT_MINUTES. */
   RAPPEL_PAR_DEFAUT_MINUTES: 60,
 
+  /* ---------- Les tâches récurrentes (anniversaires, médicaments…) ----------
+     Voir js/recurrence.js pour le calcul des dates. */
+  RECURRENCE: {
+    // Une tâche récurrente n'apparaît dans la liste qu'à l'approche de son
+    // rappel (ici 30 min avant). Le reste du temps, elle attend dans
+    // la zone repliable « Récurrentes à venir ».
+    AFFICHER_AVANT_MINUTES: 30,
+    // Pour que les rappels arrivent même si l'appli n'est pas rouverte,
+    // on envoie à l'avance au serveur les prochaines dates :
+    PUSH_NOMBRE: 14,   // au plus 14 dates par tâche...
+    PUSH_JOURS: 31     // ...dans les 31 prochains jours
+  },
+
   /* ---------- La matrice d'Eisenhower ----------
      Source : le-tdah-au-quotidien.com (« Comment prioriser ses tâches
      avec un TDAH »). Chaque tâche tombe dans une des 4 cases. Les points

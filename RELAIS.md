@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 23/11/2026 : phase 2 quasiment terminée + sauvegarde des données ajoutée._
+_Mis à jour le 24/11/2026 : tâches récurrentes ajoutées ; push testé sur Android._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -24,11 +24,14 @@ _Mis à jour le 23/11/2026 : phase 2 quasiment terminée + sauvegarde des donné
 - Clés VAPID générées : la publique est dans le code, la privée dans `CLES-PRIVEES-NE-PAS-PUBLIER.txt` (dossier local uniquement, exclu de Git).
 - Sauvegarde des tâches (sans serveur) : stockage persistant, boutons « Sauvegarder » (menu Partager sur téléphone) / « Restaurer » (avec confirmation), rappel doux après 14 jours sans sauvegarde. Testé dans Chrome (ordinateur) ; `sw.js` passé en `tda-v5`. Publié sur GitHub Pages. Testé sur Android le 24/11 : sauvegarde et restauration OK ; la confirmation native `confirm()` ne s'affichait pas → remplacée par une fenêtre de l'appli (`demanderConfirmation()` dans app.js, `sw.js` en `tda-v6`).
 - Android (MIUI) : une 2ᵉ fenêtre TDA vide peut rester dans les applis récentes après un partage. Effet du système, non corrigeable côté PWA (`launch_handler` non géré sur Chrome Android) : il suffit de la balayer.
+- **Rappel push appli fermée testé sur Android le 24/11 : la notification arrive.** ✅
+- **Tâches récurrentes** (24/11) : tous les jours / semaines (jours au choix) / mois / ans, ou tous les N. « C'est fait » archive une copie et passe à la date suivante (annulable) ; zone « Récurrentes à venir » ; rattrapage des oublis ; dates suivantes envoyées à l'avance au serveur push (14 dates max sur 31 jours). Nouveau fichier `js/recurrence.js`, `sw.js` en `tda-v8`. Testé : calculs de dates (changement d'heure, 31 du mois, 29 février, toutes les 2 semaines), parcours complet dans Chrome, liste envoyée au serveur.
 - Tests dans un navigateur : appli, réglages et pages OK, aucune erreur ; fonctions serveur vérifiées pour la syntaxe uniquement (pas d'environnement Deno ici).
 
 ## Reste à faire pour finir la phase 2
 0. Tester la nouvelle confirmation de « Restaurer » sur Android, puis « Sauvegarder » / « Restaurer » sur iPhone.
-1. **Tester un vrai rappel appli fermée**, d'abord sur Android, puis sur iPhone (appli ajoutée à l'écran d'accueil). En cas de souci : Supabase → Edge Functions → `tda-envoi` → Logs.
+1. Tester un vrai rappel appli fermée **sur iPhone** (Android OK). En cas de souci : Supabase → Edge Functions → `tda-envoi` → Logs.
+1 bis. Tester une tâche récurrente sur téléphone (ex. rappel quotidien) pendant 2–3 jours, appli fermée.
 2. Relire `confidentialite.html` et `mentions-legales.html`, et choisir un contact plus simple que GitHub pour les testeurs (email, formulaire).
 3. Plus tard : choisir la plateforme de don.
 
@@ -43,6 +46,8 @@ _Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artif
 - « Pas maintenant » (60 min) : faut-il limiter les reports ?
 - La case ④ : proposer activement de la supprimer ?
 - Relancer un rappel quand la tâche n'est toujours pas faite ?
+- Tâches récurrentes : affichage 30 min avant le rappel, est-ce le bon délai ? Faut-il signaler les prises de médicament oubliées (aujourd'hui on passe simplement à la suivante, sans compter les oublis) ?
+- Médicament plusieurs fois par jour : aujourd'hui une tâche par prise ; prévoir plusieurs heures dans une même tâche ?
 - Imposer le découpage en étapes au-delà d'une certaine durée ?
 
 ## Phases suivantes

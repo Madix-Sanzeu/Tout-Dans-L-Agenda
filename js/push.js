@@ -75,12 +75,26 @@ TDA.push = (function () {
   }
 
   // Ne garde que ce que le serveur a besoin de savoir : les rappels À VENIR.
+  // Pour une tâche RÉCURRENTE, on envoie aussi les prochaines dates à l'avance :
+  // ainsi le rappel du médicament de demain arrive même si l'appli n'a pas été rouverte.
   function rappelsAVenir(taches, masquerTitres) {
     const maintenant = new Date();
-    return taches
-      .filter(t => !t.faiteLe && t.rappel && !t.rappelEnvoye && new Date(t.rappel) > maintenant)
-      .slice(0, 500)
-      .map(t => ({ tacheId: t.id, quand: t.rappel, titre: masquerTitres ? null : t.titre.slice(0, 140) }));
+    const R = TDA.config.RECURRENCE;
+    const liste = [];
+    for (const t of taches) {
+      if (t.faiteLe || !t.rappel) continue;
+      const titre = masquerTitres ? null : t.titre.slice(0, 140);
+      if (!t.rappelEnvoye && new Date(t.rappel) > maintenant) {
+        liste.push({ tacheId: t.id, quand: t.rappel, titre });
+      }
+      if (t.recurrence) {
+        // Chaque date a son propre identifiant : "idDeLaTache~1", "~2"...
+        const depuis = new Date(Math.max(maintenant, new Date(t.rappel)));
+        TDA.recurrence.prochaines(t.recurrence, depuis, R.PUSH_NOMBRE, R.PUSH_JOURS)
+          .forEach((date, i) => liste.push({ tacheId: t.id + '~' + (i + 1), quand: date.toISOString(), titre }));
+      }
+    }
+    return liste.slice(0, 500); // le serveur n'en accepte pas plus
   }
 
   // 1. ACTIVER (appelé par le bouton dans les réglages)

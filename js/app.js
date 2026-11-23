@@ -151,6 +151,7 @@ TDA.app = (function () {
       const m = TDA.moments.trouver(etat.moments, tache.moment);
       html += `<span class="pastille" style="--c:${m.couleur}">${m.emoji} ${proteger(m.nom)}</span>`;
     }
+    if (tache.recurrence) html += `<span class="pastille pastille-recurrence">🔁 ${TDA.recurrence.libelle(tache.recurrence)}</span>`;
     if (tache.echeance) html += `<span>📅 ${dateLisible(tache.echeance)}</span>`;
     // Durée affichée AVEC la marge d'un tiers conseillée par l'article
     if (tache.duree) html += `<span title="Estimation ${tache.duree} min + un tiers de marge">⏱ ≈ ${dureeLisible(TDA.priorite.dureeAvecMarge(tache))}</span>`;
@@ -174,12 +175,11 @@ TDA.app = (function () {
           <div class="tache-titre">${proteger(tache.titre)}</div>
           <div class="meta">
             ${htmlMeta(tache, options.montrerMoment)}
-            ${fait ? '' : `<button class="score" data-action="raisons" data-id="${tache.id}" title="Pourquoi ce rang ?">Pourquoi ? ${tache.score} pts</button>`}
+            ${fait || options.enAttente ? '' : `<button class="score" data-action="raisons" data-id="${tache.id}" title="Pourquoi ce rang ?">Pourquoi ? ${tache.score} pts</button>`}
           </div>
           <div class="raisons" id="raisons-${tache.id}" hidden>${(tache.raisons || []).join(' · ') || 'Aucun critère'}</div>
         </div>
-        ${options.reportee ? `<button class="bouton-texte" data-action="reprendre" data-id="${tache.id}">Reprendre</button>` : ''}
-        ${fait ? '' : `<button class="bouton-texte" data-action="modifier" data-id="${tache.id}" aria-label="Modifier">✎</button>`}
+        ${options.reportee ? `<button class="bouton-texte" data-action="reprendre" data-id="${tache.id}">Reprendre</button>` : ''}        ${fait ? '' : `<button class="bouton-texte" data-action="modifier" data-id="${tache.id}" aria-label="Modifier">✎</button>`}
       </li>`;
   }
 
@@ -196,7 +196,13 @@ TDA.app = (function () {
       : '🌙 Hors plages — temps libre';
 
     // b) Quelles tâches afficher ?
-    const aFaire = etat.taches.filter(t => !t.faiteLe);
+    //    Les tâches récurrentes dont le rappel est encore loin attendent à part
+    //    (zone « Récurrentes à venir »), pour ne pas encombrer la liste.
+    const avance = TDA.config.RECURRENCE.AFFICHER_AVANT_MINUTES * 60000;
+    const enAttente = t => Boolean(t.recurrence) && new Date(t.rappel) - maintenant > avance;
+    const aFaire = etat.taches.filter(t => !t.faiteLe && !enAttente(t));
+    const recurrentes = etat.taches.filter(t => !t.faiteLe && enAttente(t))
+      .sort((a, b) => a.rappel.localeCompare(b.rappel));
     const visibles = etat.voirTout ? aFaire : aFaire.filter(t => actifs.includes(t.moment));
     const triees = TDA.priorite.trier(visibles, maintenant);
     const pretes = triees.filter(t => !TDA.priorite.estReportee(t, maintenant));
@@ -254,6 +260,10 @@ TDA.app = (function () {
     $('nb-reportees').textContent = reportees.length;
     $('zone-reportees').hidden = reportees.length === 0;
 
+    $('liste-recurrentes').innerHTML = recurrentes.map(t => htmlLigne(t, { enAttente: true, montrerMoment: true })).join('');
+    $('nb-recurrentes').textContent = recurrentes.length;
+    $('zone-recurrentes').hidden = recurrentes.length === 0;
+
     const faites = etat.taches.filter(t => estAujourdhui(t.faiteLe));
     $('liste-faites').innerHTML = faites.map(t => htmlLigne(t)).join('');
     $('nb-faites').textContent = faites.length;
@@ -266,15 +276,80 @@ TDA.app = (function () {
 
   function faire(id) {
     const t = trouverTache(id);
+    if (t.recurrence) return faireRecurrente(t);
     t.faiteLe = new Date().toISOString();
     sauverEtAfficher();
     afficherBandeau('Bravo, une de moins ! 🎉', 'Annuler', () => defaire(id));
   }
 
+  // Une tâche récurrente faite :
+  // 1. on range une COPIE dans « Faites aujourd'hui » (l'historique) ;
+  // 2. la tâche elle-même passe à sa prochaine date.
+  // La copie garde l'état d'avant, pour pouvoir tout annuler.
+  function faireRecurrente(t) {
+    const maintenant = new Date();
+    const copie = structuredClone(t);
+    copie.id = nouvelId();
+    copie.recurrence = null;
+    copie.serieId = t.id;                                   // lien vers la tâche d'origine
+    copie.faiteLe = maintenant.toISOString();
+    copie.avant = { rappel: t.rappel, echeance: t.echeance, rappelEnvoye: t.rappelEnvoye,
+                    reporteJusqua: t.reporteJusqua, etapes: structuredClone(t.etapes || []) };
+    etat.taches.push(copie);
+
+    // Faite en avance (avant son rappel) → on part du rappel prévu ; sinon de maintenant.
+    const depart = new Date(Math.max(maintenant, new Date(t.rappel)));
+    avancerRecurrente(t, TDA.recurrence.suivante(t.recurrence, depart), false);
+    t.reporteJusqua = null;
+    (t.etapes || []).forEach(e => { e.fait = false; });     // les étapes repartent à zéro
+
+    sauverEtAfficher();
+    afficherBandeau('Fait ! Prochaine fois : ' + dateLisible(t.rappel), 'Annuler', () => defaire(copie.id));
+  }
+
+  // Place la tâche récurrente à une nouvelle date de rappel.
+  // L'échéance (si elle existe) garde le même écart avec le rappel.
+  function avancerRecurrente(t, nouvelleDate, dejaSonne) {
+    if (t.echeance) {
+      const ecart = new Date(t.echeance) - new Date(t.rappel);
+      t.echeance = new Date(nouvelleDate.getTime() + ecart).toISOString();
+    }
+    t.rappel = nouvelleDate.toISOString();
+    t.rappelEnvoye = dejaSonne;
+  }
+
   function defaire(id) {
     const t = trouverTache(id);
+    // Copie d'une tâche récurrente : on remet la tâche d'origine comme avant.
+    if (t.serieId) {
+      const origine = trouverTache(t.serieId);
+      if (origine && t.avant) Object.assign(origine, t.avant);
+      etat.taches = etat.taches.filter(x => x.id !== t.id);
+      return sauverEtAfficher();
+    }
     t.faiteLe = null;
     sauverEtAfficher();
+  }
+
+  // Une tâche récurrente oubliée (appli fermée, pas cochée) : si sa date
+  // SUIVANTE est déjà passée, on la fait avancer jusqu'à la plus récente.
+  // Ex. : médicament de 8 h non coché hier → la tâche affiche celui d'aujourd'hui.
+  // Si les rappels push sont activés, le serveur a déjà prévenu : on note le
+  // rappel "déjà sonné". Sinon, l'appli le fera sonner une fois.
+  // Renvoie true si quelque chose a changé.
+  function rattraperRecurrentes(maintenant = new Date()) {
+    let change = false;
+    const dejaSonne = TDA.push.estActif();
+    for (const t of etat.taches) {
+      if (!t.recurrence || t.faiteLe || !t.rappel) continue;
+      let prochaine = TDA.recurrence.suivante(t.recurrence, new Date(t.rappel));
+      for (let securite = 0; prochaine <= maintenant && securite < 1000; securite++) {
+        avancerRecurrente(t, prochaine, dejaSonne);
+        prochaine = TDA.recurrence.suivante(t.recurrence, prochaine);
+        change = true;
+      }
+    }
+    return change;
   }
 
   function reporter(id) {
@@ -342,10 +417,21 @@ TDA.app = (function () {
       { ...base, id: nouvelId(), titre: 'Répondre au mail du club de sport', etiquettes: [], moment: 'partout',
         echeance: dans(30), duree: 10, rappel: dans(3), creeLe: dans(-1), etapes: [] }
     ];
+    // Deux tâches récurrentes : un médicament chaque matin, un anniversaire chaque année.
+    const demain8h = new Date(); demain8h.setDate(demain8h.getDate() + 1); demain8h.setHours(8, 0, 0, 0);
+    const anniv = new Date(); anniv.setDate(anniv.getDate() + 20); anniv.setHours(9, 0, 0, 0);
+    etat.taches.push(
+      { ...base, id: nouvelId(), titre: 'Prendre le traitement du matin', etiquettes: ['important'], moment: 'partout',
+        echeance: null, duree: 5, rappel: demain8h.toISOString(), creeLe: dans(-100), etapes: [],
+        recurrence: { unite: 'jour', intervalle: 1, jours: [], ancre: demain8h.toISOString() } },
+      { ...base, id: nouvelId(), titre: 'Souhaiter l\'anniversaire de Léa', etiquettes: ['important', 'agreable'], moment: 'perso',
+        echeance: null, duree: 5, rappel: anniv.toISOString(), creeLe: dans(-100), etapes: [],
+        recurrence: { unite: 'an', intervalle: 1, jours: [], ancre: anniv.toISOString() } }
+    );
     etat.voirTout = true;
     $('voir-tout').checked = true;
     sauverEtAfficher();
-    afficherBandeau('Exemple chargé (6 tâches). « Tous les moments » est activé.');
+    afficherBandeau('Exemple chargé (8 tâches, dont 2 récurrentes). « Tous les moments » est activé.');
   }
 
   /* ------------------------------------------------------------------
@@ -387,6 +473,7 @@ TDA.app = (function () {
     // on propose d'office une heure, que l'utilisateur peut changer.
     const rappelPropose = new Date(Date.now() + TDA.config.RAPPEL_PAR_DEFAUT_MINUTES * 60000).toISOString();
     $('champ-rappel').value = versChampDate(t && !t.rappelEnvoye && t.rappel ? t.rappel : rappelPropose);
+    afficherRepetition(t ? t.recurrence : null);
 
     $('dialogue-tache').showModal();
     $('champ-titre').focus();
@@ -411,6 +498,23 @@ TDA.app = (function () {
       duree: $('champ-duree').value ? Number($('champ-duree').value) : null,
       rappel: depuisChampDate($('champ-rappel').value)
     };
+
+    // La répétition : elle part de la date du rappel (l'"ancre").
+    // Si on modifie une tâche sans toucher au rappel, on garde l'ancre d'origine
+    // (sinon un report "Pas maintenant" décalerait toutes les dates suivantes).
+    const ancienne = etat.tacheEnEdition ? trouverTache(etat.tacheEnEdition) : null;
+    donnees.recurrence = lireRepetition(donnees.rappel);
+    if (donnees.recurrence && ancienne && ancienne.recurrence && ancienne.rappel === donnees.rappel) {
+      donnees.recurrence.ancre = ancienne.recurrence.ancre;
+    }
+    // "Toutes les semaines le lundi" avec un rappel un mardi : on cale le
+    // premier rappel sur le prochain jour coché.
+    const r = donnees.recurrence;
+    if (r && r.unite === 'semaine' && r.jours.length && !r.jours.includes(new Date(donnees.rappel).getDay())) {
+      const premiere = TDA.recurrence.suivante(r, new Date(new Date(donnees.rappel).getTime() - 1));
+      donnees.rappel = premiere.toISOString();
+      r.ancre = donnees.rappel;
+    }
 
     // Les étapes : on garde l'état "fait" des lignes qui n'ont pas changé.
     const anciennes = etat.tacheEnEdition ? (trouverTache(etat.tacheEnEdition).etapes || []) : [];
@@ -455,6 +559,47 @@ TDA.app = (function () {
     etat.taches = etat.taches.filter(x => x.id !== t.id);
     $('dialogue-tache').close();
     sauverEtAfficher();
+  }
+
+  // --- La répétition dans le formulaire ---
+  const UNITES = { jour: ['jour', 'jours'], semaine: ['semaine', 'semaines'], mois: ['mois', 'mois'], an: ['an', 'ans'] };
+
+  // Remplit les champs "Répéter" à partir d'une règle (ou null = Jamais).
+  function afficherRepetition(regle) {
+    $('champ-repetition').value = regle ? regle.unite : '';
+    $('champ-intervalle').value = regle ? regle.intervalle : 1;
+    const jours = regle && regle.jours ? regle.jours : [];
+    $('choix-jours-repetition').innerHTML = ORDRE_JOURS.map(j => `
+      <button type="button" class="jour ${jours.includes(j) ? 'actif' : ''}" data-jour-repetition="${j}"
+              aria-pressed="${jours.includes(j)}">${NOMS_JOURS[j]}</button>`).join('');
+    majChampsRepetition();
+  }
+
+  // Montre / cache "tous les N ..." et les jours, selon le choix.
+  function majChampsRepetition() {
+    const unite = $('champ-repetition').value;
+    $('zone-intervalle').hidden = !unite;
+    $('choix-jours-repetition').hidden = unite !== 'semaine';
+    if (!unite) return;
+    const n = Number($('champ-intervalle').value) || 1;
+    $('unite-intervalle').textContent = UNITES[unite][n > 1 ? 1 : 0];
+    // Semaine sans jour coché : on coche le jour du rappel, par défaut.
+    if (unite === 'semaine' && !$('choix-jours-repetition').querySelector('.actif')) {
+      const jourRappel = $('champ-rappel').value ? new Date($('champ-rappel').value).getDay() : new Date().getDay();
+      const bouton = $('choix-jours-repetition').querySelector(`[data-jour-repetition="${jourRappel}"]`);
+      if (bouton) { bouton.classList.add('actif'); bouton.setAttribute('aria-pressed', 'true'); }
+    }
+  }
+
+  // Lit les champs et fabrique la règle (ou null si "Jamais").
+  function lireRepetition(rappelIso) {
+    const unite = $('champ-repetition').value;
+    if (!unite) return null;
+    const jours = unite === 'semaine'
+      ? [...$('choix-jours-repetition').querySelectorAll('.actif')].map(b => Number(b.dataset.jourRepetition))
+      : [];
+    const intervalle = Math.min(99, Math.max(1, Math.floor(Number($('champ-intervalle').value) || 1)));
+    return { unite, intervalle, jours, ancre: rappelIso };
   }
 
   // Les boutons "Dans 15 min", "Dans 1 h", "Demain 9 h", "Aucun"
@@ -760,6 +905,15 @@ TDA.app = (function () {
       if (b) $('champ-echeance').value = dateHorizon(b.dataset.horizon);
     });
     $('champ-duree').addEventListener('change', e => { $('aide-decouper').hidden = Number(e.target.value) < 60; });
+    $('champ-repetition').addEventListener('change', majChampsRepetition);
+    $('champ-intervalle').addEventListener('input', majChampsRepetition);
+    $('choix-jours-repetition').addEventListener('click', e => {
+      const b = e.target.closest('[data-jour-repetition]');
+      if (!b) return;
+      b.classList.toggle('actif');
+      b.setAttribute('aria-pressed', b.classList.contains('actif'));
+    });
+    $('liste-recurrentes').addEventListener('click', surClicListe);
 
     $('voir-tout').addEventListener('change', e => { etat.voirTout = e.target.checked; afficher(); });
 
@@ -786,7 +940,10 @@ TDA.app = (function () {
 
   // Exécuté régulièrement : rappels + changement de moment de vie.
   function tic() {
-    if (TDA.rappels.verifier(etat.taches)) TDA.stockage.ecrireTaches(etat.taches);
+    const rattrape = rattraperRecurrentes();
+    const sonne = TDA.rappels.verifier(etat.taches);
+    if (rattrape) TDA.push.planifierSynchro(etat.taches);   // nouvelles dates → serveur à jour
+    if (rattrape || sonne) TDA.stockage.ecrireTaches(etat.taches);
     afficher();
   }
 

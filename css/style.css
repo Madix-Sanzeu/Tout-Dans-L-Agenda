@@ -261,3 +261,11 @@ button { cursor: pointer; }
 @media (prefers-reduced-motion: no-preference) {
   .tache, .carte-maintenant { transition: transform .15s ease; }
 }
+
+/* ---------- Tâches récurrentes ---------- */
+.ligne-repetition { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.ligne-repetition select { flex: 1 1 180px; }
+.intervalle { display: flex; align-items: center; gap: 6px; font-size: .9rem; color: var(--texte-doux); }
+.champ .intervalle input { width: 4.2em; min-height: 40px; padding: 6px 8px; text-align: center; }
+.choix-jours { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pastille-recurrence { --c: #0c8599; }
