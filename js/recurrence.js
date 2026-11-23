@@ -6,7 +6,8 @@
        unite: 'jour' | 'semaine' | 'mois' | 'an',
        intervalle: 1,          // tous les 1, 2, 3... jours / semaines / mois / ans
        jours: [1, 3, 5],       // pour 'semaine' : quels jours (0 = dimanche ... 6 = samedi)
-       ancre: '2026-11-24T08:00:00.000Z'  // la toute première date (celle du rappel)
+       ancre: '2026-11-24T08:00:00.000Z', // la toute première date (celle du rappel)
+       fin: '2026-12-10T22:59:59.000Z'    // facultatif : plus aucune date après (null = pas d'arrêt prévu)
      }
 
    Toutes les dates sont calculées À PARTIR DE L'ANCRE, et pas en ajoutant
@@ -63,8 +64,14 @@ TDA.recurrence = (function () {
   }
 
   /* La prochaine date de la règle STRICTEMENT après "apres".
-     Renvoie un objet Date. */
+     Renvoie un objet Date, ou null si la règle est terminée (date de fin passée). */
   function suivante(regle, apres) {
+    const date = suivanteSansFin(regle, apres);
+    if (date && regle.fin && date > new Date(regle.fin)) return null;
+    return date;
+  }
+
+  function suivanteSansFin(regle, apres) {
     const ancre = new Date(regle.ancre);
     const n = Math.max(1, Math.floor(regle.intervalle || 1));
     apres = new Date(apres);
@@ -116,7 +123,7 @@ TDA.recurrence = (function () {
     let d = new Date(depuis);
     while (dates.length < nombre) {
       d = suivante(regle, d);
-      if (d > limite) break;
+      if (!d || d > limite) break;          // règle terminée, ou trop loin
       dates.push(d);
     }
     return dates;
@@ -137,8 +144,33 @@ TDA.recurrence = (function () {
       const ordre = [1, 2, 3, 4, 5, 6, 0]; // du lundi au dimanche
       texte += ' : ' + ordre.filter(j => regle.jours.includes(j)).map(j => NOMS_JOURS_COURTS[j]).join(', ');
     }
+    if (regle.fin) {
+      texte += ', jusqu\'au ' + new Date(regle.fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    }
     return texte;
   }
 
-  return { suivante, prochaines, libelle };
+  // Fin de journée (23:59:59) d'une date : la date de fin est INCLUSE.
+  function finDeJournee(date) {
+    const d = new Date(date);
+    d.setHours(23, 59, 59, 0);
+    return d;
+  }
+
+  // La PREMIÈRE date d'une règle qui commence à "debut" (sa propre ancre),
+  // sans proposer une date déjà passée :
+  // - si "debut" convient (dans le futur, et bon jour de la semaine), c'est elle ;
+  // - sinon, la suivante après maintenant.
+  // garderAujourdhui = true : si "debut" est aujourd'hui mais l'heure est passée,
+  // on la garde quand même (ex. : anniversaire du jour → on le voit tout de suite).
+  function premiere(regle, maintenant = new Date(), garderAujourdhui = false) {
+    const debut = new Date(regle.ancre);
+    const jours = regle.unite === 'semaine' ? (regle.jours || []) : [];
+    const bonJour = !jours.length || jours.includes(debut.getDay());
+    const memeJour = debut.toDateString() === maintenant.toDateString();
+    if (bonJour && (debut >= maintenant || (garderAujourdhui && memeJour))) return debut;
+    return suivante(regle, new Date(Math.max(maintenant, debut - 1)));
+  }
+
+  return { suivante, prochaines, libelle, finDeJournee, premiere };
 })();

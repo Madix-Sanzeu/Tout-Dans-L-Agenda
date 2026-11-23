@@ -47,6 +47,7 @@ TDA - Tout Dans lAgenda/
 │   ├── priorite.js   ⭐ LE CALCUL DU SCORE et le tri des tâches
 │   ├── rappels.js    Les notifications quand l'appli est ouverte
 │   ├── recurrence.js Les dates des tâches qui reviennent (anniversaires, médicaments…)
+│   ├── modeles.js    Les modèles de l'assistant « Rappel récurrent » (questions + fabrication)
 │   ├── push.js       Les rappels même appli fermée (dialogue avec le serveur)
 │   └── app.js        Le chef d'orchestre : affichage et clics
 ├── sw.js             Service worker : hors-ligne + réception des notifications push
@@ -63,7 +64,7 @@ TDA - Tout Dans lAgenda/
 **Principe d'organisation :** chaque fichier JavaScript fait **une seule chose**. Ils sont chargés dans un ordre précis (en bas de `index.html`), car chacun utilise les précédents :
 
 ```
-config → stockage → moments → priorite → rappels → recurrence → push → app
+config → stockage → moments → priorite → rappels → recurrence → modeles → push → app
 ```
 
 Tous rangent leurs fonctions dans un même « tiroir » global nommé `TDA` : `TDA.config`, `TDA.stockage`, `TDA.priorite`, etc. Ça évite les conflits de noms.
@@ -161,27 +162,39 @@ Si l'appli est ouverte, la même tâche peut déclencher les deux notifications.
 
 ---
 
-## 7 bis. Les tâches récurrentes (`js/recurrence.js`)
+## 7 bis. Les rappels récurrents (`js/recurrence.js` et `js/modeles.js`)
 
-Une tâche peut se répéter : tous les jours, toutes les semaines (avec le choix des jours), tous les mois, tous les ans, ou tous les N jours, semaines, mois ou ans. On la règle dans le formulaire, sous le rappel (« 🔁 Répéter »).
+**Créer : l'assistant.** Le bouton « 🔁 Rappel récurrent » ouvre un assistant. On choisit un modèle, puis on répond à quelques questions :
 
-**La règle.** Elle est enregistrée dans la tâche, par exemple :
+| Modèle | Questions | Ce qui est créé |
+|---|---|---|
+| 🎂 Anniversaire | De qui, date, heure, rappel X jours avant pour le cadeau | 1 tâche par an, plus « Trouver un cadeau » X jours avant (avec ses étapes) |
+| 💊 Médicament | Nom, combien de fois par jour et à quelles heures, tous les jours, certains jours ou tous les N jours, à partir de quand, pendant combien de temps (pas d'arrêt / N jours / jusqu'au…) | 1 tâche par prise |
+| 🧾 Facture ou paiement | Quoi, prochaine échéance, mois / 3 mois / an, prévenir X jours avant | 1 tâche, avec l'échéance comme date limite |
+| 📄 Renouvellement | Quoi, date limite, tous les N mois ou ans, prévenir X jours avant | idem |
+| 📅 Chaque semaine | Quoi, quels jours, heure | 1 tâche |
+| 🌱 Tous les N jours | Quoi, tous les combien de jours, à partir de quand, heure | 1 tâche |
+| ✏️ Personnalisé | Toutes les options | 1 tâche par heure |
+
+Les tâches créées ensemble (les prises d'un médicament, l'anniversaire et son cadeau) forment une **série** (champ `groupe`). On peut les supprimer d'un coup avec « Supprimer toute la série ».
+
+**Personnaliser.** Chaque rappel se modifie ensuite avec ✎, dans le formulaire habituel : rappel, « Répéter », espacement, jours, « jusqu'au », priorités, étapes… Le bloc « Répéter » n'apparaît qu'en modification : pour créer, on passe par l'assistant.
+
+**Ajouter un modèle** (fichier `js/modeles.js`) : copie un modèle de la liste `MODELES`, puis change son `id`, ses textes, ses `champs` (les questions) et sa fonction `construire` (qui transforme les réponses en tâches). L'assistant affiche les questions tout seul. Les heures proposées par défaut sont dans `config.js` (`ASSISTANT`).
+
+**La règle de répétition.** Elle est enregistrée dans la tâche, par exemple :
 
 ```json
-"recurrence": { "unite": "jour", "intervalle": 1, "jours": [], "ancre": "2026-11-25T07:00:00.000Z" }
+"recurrence": { "unite": "jour", "intervalle": 1, "jours": [], "ancre": "2026-11-25T07:00:00.000Z", "fin": null }
 ```
 
-L'**ancre** est la première date, celle du rappel. Toutes les dates suivantes sont calculées à partir d'elle, et non en ajoutant un jour à la date précédente. Ainsi l'heure ne glisse pas au changement d'heure, et un anniversaire le 29 février retombe le 28 février les années non bissextiles.
+L'**ancre** est la première date. Toutes les dates suivantes sont calculées à partir d'elle, et non en ajoutant un jour à la date précédente. Ainsi l'heure ne glisse pas au changement d'heure, et un anniversaire le 29 février tombe le 28 février les années non bissextiles. **fin** est la dernière date incluse ; `null` signifie « pas d'arrêt prévu ».
 
-**Ce qui se passe quand on coche « C'est fait » (`faireRecurrente()` dans `app.js`) :**
-1. Une **copie** de la tâche est rangée dans « Faites aujourd'hui ». C'est l'historique, et elle garde l'état d'avant pour pouvoir annuler.
-2. La tâche elle-même **passe à sa prochaine date** : nouveau rappel, échéance décalée d'autant, étapes décochées.
+**Quand on coche « C'est fait »** (`faireRecurrente()` dans `app.js`) : une copie est rangée dans « Faites aujourd'hui » (l'historique, qu'on peut annuler), et la tâche passe à sa prochaine date. S'il n'y a plus de date (fin du traitement), la tâche est simplement terminée.
 
-**Pour ne pas encombrer la liste**, une tâche récurrente n'apparaît qu'à l'approche de son rappel (30 min avant, réglable avec `RECURRENCE.AFFICHER_AVANT_MINUTES`). Le reste du temps, elle attend dans la zone repliable « 🔁 Récurrentes à venir ».
+**Pour ne pas encombrer la liste**, une tâche récurrente n'apparaît que 30 min avant son rappel (`RECURRENCE.AFFICHER_AVANT_MINUTES`). Le reste du temps, elle attend dans « 🔁 Récurrentes à venir ». Une occurrence oubliée est rattrapée : la tâche passe à la date la plus récente (`rattraperRecurrentes()`).
 
-**Si on oublie de la cocher**, par exemple le médicament d'hier, la fonction `rattraperRecurrentes()` la fait avancer jusqu'à la date la plus récente, au lieu d'accumuler les retards.
-
-**Les rappels appli fermée.** `push.js` envoie au serveur, en plus du prochain rappel, les dates suivantes à l'avance (au plus 14 dates dans les 31 jours, réglable avec `RECURRENCE.PUSH_NOMBRE` et `PUSH_JOURS`). Le rappel du médicament de demain arrive donc même si l'appli n'a pas été rouverte. Chaque date a son propre identifiant : `idDeLaTache~1`, `~2`…
+**Rappels appli fermée.** `push.js` envoie au serveur les prochaines dates à l'avance (14 au plus, dans les 31 jours). Le rappel de demain arrive donc même si l'appli n'a pas été rouverte.
 
 ---
 

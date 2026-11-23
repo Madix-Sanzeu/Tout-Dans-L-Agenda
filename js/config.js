@@ -56,6 +56,22 @@ TDA.config = {
     PUSH_JOURS: 31     // ...dans les 31 prochains jours
   },
 
+  /* ---------- L'assistant « Rappel récurrent » (voir js/modeles.js) ----------
+     Les heures proposées d'office ; la personne peut toujours les changer. */
+  ASSISTANT: {
+    HEURE_PAR_DEFAUT: '09:00',
+    HEURE_ANNIVERSAIRE: '09:00',
+    // Médicament : heures proposées selon le nombre de prises par jour
+    HEURES_PRISES: {
+      1: ['08:00'],
+      2: ['08:00', '20:00'],
+      3: ['08:00', '13:00', '20:00'],
+      4: ['08:00', '12:00', '16:00', '20:00'],
+      5: ['07:00', '10:00', '13:00', '16:00', '20:00'],
+      6: ['07:00', '10:00', '13:00', '16:00', '19:00', '22:00']
+    }
+  },
+
   /* ---------- La matrice d'Eisenhower ----------
      Source : le-tdah-au-quotidien.com (« Comment prioriser ses tâches
      avec un TDAH »). Chaque tâche tombe dans une des 4 cases. Les points

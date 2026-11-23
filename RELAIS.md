@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 24/11/2026 : tâches récurrentes ajoutées ; push testé sur Android._
+_Mis à jour le 24/11/2026 : assistant « Rappel récurrent » (7 modèles) ; push testé sur Android._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -26,6 +26,7 @@ _Mis à jour le 24/11/2026 : tâches récurrentes ajoutées ; push testé sur An
 - Android (MIUI) : une 2ᵉ fenêtre TDA vide peut rester dans les applis récentes après un partage. Effet du système, non corrigeable côté PWA (`launch_handler` non géré sur Chrome Android) : il suffit de la balayer.
 - **Rappel push appli fermée testé sur Android le 24/11 : la notification arrive.** ✅
 - **Tâches récurrentes** (24/11) : tous les jours / semaines (jours au choix) / mois / ans, ou tous les N. « C'est fait » archive une copie et passe à la date suivante (annulable) ; zone « Récurrentes à venir » ; rattrapage des oublis ; dates suivantes envoyées à l'avance au serveur push (14 dates max sur 31 jours). Nouveau fichier `js/recurrence.js`, `sw.js` en `tda-v8`. Testé : calculs de dates (changement d'heure, 31 du mois, 29 février, toutes les 2 semaines), parcours complet dans Chrome, liste envoyée au serveur.
+- **Assistant « 🔁 Rappel récurrent »** (24/11, `js/modeles.js`, `sw.js` en `tda-v9`) : 7 modèles. 🎂 Anniversaire (rappel cadeau X jours avant), 💊 Médicament (1 à 6 prises par jour, tous les jours / certains jours / tous les N jours, pas d'arrêt / N jours / jusqu'au…), 🧾 Facture ou paiement, 📄 Renouvellement, 📅 Chaque semaine, 🌱 Tous les N jours, ✏️ Personnalisé. Séries supprimables d'un coup ; date de fin dans le moteur ; personnalisation via ✎ (« Répéter » + « jusqu'au »). Le champ « Répéter » n'apparaît plus à la création d'une tâche simple. Testé dans Chrome : les 7 modèles, prises programmées, suppression de série, aucune erreur.
 - Tests dans un navigateur : appli, réglages et pages OK, aucune erreur ; fonctions serveur vérifiées pour la syntaxe uniquement (pas d'environnement Deno ici).
 
 ## Reste à faire pour finir la phase 2
@@ -47,7 +48,8 @@ _Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artif
 - La case ④ : proposer activement de la supprimer ?
 - Relancer un rappel quand la tâche n'est toujours pas faite ?
 - Tâches récurrentes : affichage 30 min avant le rappel, est-ce le bon délai ? Faut-il signaler les prises de médicament oubliées (aujourd'hui on passe simplement à la suivante, sans compter les oublis) ?
-- Médicament plusieurs fois par jour : aujourd'hui une tâche par prise ; prévoir plusieurs heures dans une même tâche ?
+- Les modèles de l'assistant : la liste convient-elle ? D'autres à ajouter (rendez-vous de suivi, routine du matin / du soir, pause, s'hydrater…) ?
+- Médicament : une tâche par prise (« Prendre X (1/3 · 8h) »). Est-ce lisible, ou vaut-il mieux une seule tâche avec plusieurs heures ?
 - Imposer le découpage en étapes au-delà d'une certaine durée ?
 
 ## Phases suivantes

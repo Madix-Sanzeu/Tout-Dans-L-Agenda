@@ -269,3 +269,36 @@ button { cursor: pointer; }
 .champ .intervalle input { width: 4.2em; min-height: 40px; padding: 6px 8px; text-align: center; }
 .choix-jours { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .pastille-recurrence { --c: #0c8599; }
+
+/* ---------- Assistant « Rappel récurrent » ---------- */
+.boutons-ajout { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.boutons-ajout .bouton-ajouter { margin-top: 0; }
+.bouton-ajouter-recurrent { border-color: #0c8599; color: #0c8599; background: color-mix(in srgb, #0c8599 10%, transparent); }
+@media (max-width: 380px) { .boutons-ajout { grid-template-columns: 1fr; } }
+
+.grille-modeles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.carte-modele {
+  display: grid; gap: 2px; justify-items: start; text-align: left;
+  padding: 14px; min-height: 104px; border-radius: 14px;
+  border: 1px solid var(--bordure); background: var(--fond);
+}
+.carte-modele:hover, .carte-modele:focus-visible { border-color: var(--principal); outline: none; }
+.carte-modele strong { font-size: 1rem; }
+.carte-modele span:last-child { font-size: .8rem; color: var(--texte-doux); }
+.emoji-modele { font-size: 1.6rem; line-height: 1.2; }
+
+.choix-pilules { display: flex; flex-wrap: wrap; gap: 8px; }
+.choix-pilules label {
+  border: 2px solid var(--bordure); border-radius: 999px; padding: 8px 14px;
+  cursor: pointer; font-weight: 600; font-size: .9rem; user-select: none;
+}
+.choix-pilules input { position: absolute; opacity: 0; pointer-events: none; }
+.choix-pilules label:has(input:checked) { border-color: var(--principal); background: var(--principal-clair); color: var(--principal); }
+.choix-pilules label:has(input:focus-visible) { outline: 2px solid var(--principal); outline-offset: 2px; }
+.ligne-nombre { display: flex; align-items: center; gap: 8px; color: var(--texte-doux); }
+.champ .ligne-nombre input { width: 5.5em; }
+.liste-heures { display: flex; flex-wrap: wrap; gap: 10px; }
+.heure-prise { display: grid; gap: 4px; font-size: .8rem; color: var(--texte-doux); }
+.champ .heure-prise input { width: auto; min-height: 42px; }
+#etape-questions .champ[hidden] { display: none; }
+#texte-confirmation { white-space: pre-line; }

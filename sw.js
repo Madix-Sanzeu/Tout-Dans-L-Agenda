@@ -13,11 +13,11 @@
    garderont l'ancienne copie.
    ===================================================================== */
 
-const VERSION = 'tda-v8';
+const VERSION = 'tda-v9';
 const FICHIERS = [
   './', 'index.html', 'aide.html', 'confidentialite.html', 'mentions-legales.html',
   'css/style.css', 'manifest.json', 'icone.svg', 'icone-192.png', 'icone-512.png',
-  'js/config.js', 'js/stockage.js', 'js/moments.js', 'js/priorite.js', 'js/rappels.js', 'js/recurrence.js', 'js/push.js', 'js/app.js'
+  'js/config.js', 'js/stockage.js', 'js/moments.js', 'js/priorite.js', 'js/rappels.js', 'js/recurrence.js', 'js/modeles.js', 'js/push.js', 'js/app.js'
 ];
 
 // RÉCEPTION D'UNE NOTIFICATION PUSH envoyée par le serveur (appli fermée ou non).

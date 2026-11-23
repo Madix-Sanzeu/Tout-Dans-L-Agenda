@@ -45,7 +45,10 @@
       <div id="maintenant"></div>
     </section>
 
-    <button id="bouton-ajouter" class="bouton-ajouter">＋ Ajouter une tâche</button>
+    <div class="boutons-ajout">
+      <button id="bouton-ajouter" class="bouton-ajouter">＋ Ajouter une tâche</button>
+      <button id="bouton-ajouter-recurrent" class="bouton-ajouter bouton-ajouter-recurrent">🔁 Rappel récurrent</button>
+    </div>
 
     <!-- ============ LA SUITE DE LA LISTE ============ -->
     <section aria-labelledby="titre-ensuite">
@@ -88,6 +91,26 @@
       </nav>
     </footer>
   </main>
+
+  <!-- ============ FENÊTRE : ASSISTANT « RAPPEL RÉCURRENT » ============
+       Étape 1 : choisir un modèle (cartes remplies par app.js depuis js/modeles.js)
+       Étape 2 : répondre aux questions du modèle -->
+  <dialog id="dialogue-recurrent" class="dialogue">
+    <form id="formulaire-recurrent" method="dialog" novalidate>
+      <h2 id="titre-recurrent">Nouveau rappel récurrent</h2>
+      <div id="etape-modeles" class="grille-modeles"></div>
+      <div id="etape-questions" hidden>
+        <p id="description-modele" class="info"></p>
+        <div id="champs-modele"></div>
+      </div>
+      <div class="actions-dialogue">
+        <button type="button" id="bouton-retour-modeles" class="bouton-texte" hidden>← Autre type</button>
+        <span class="espace"></span>
+        <button type="button" id="bouton-annuler-recurrent" class="bouton-secondaire">Annuler</button>
+        <button type="submit" id="bouton-creer-recurrent" class="bouton-principal" hidden>Créer</button>
+      </div>
+    </form>
+  </dialog>
 
   <!-- ============ FENÊTRE : AJOUTER / MODIFIER UNE TÂCHE ============ -->
   <!-- <dialog> est une fenêtre qui s'affiche par-dessus la page -->
@@ -147,8 +170,10 @@
         <button type="button" data-rappel="demain">Demain 9 h</button>
       </div>
 
-      <!-- La répétition : la règle part de la date du rappel ci-dessus -->
-      <div class="champ">
+      <!-- La répétition : la règle part de la date du rappel ci-dessus.
+           Affichée seulement pour MODIFIER une tâche (pour en créer une,
+           il y a le bouton « 🔁 Rappel récurrent » et son assistant). -->
+      <div id="bloc-repetition" class="champ">
         <span>🔁 Répéter</span>
         <div class="ligne-repetition">
           <select id="champ-repetition" aria-label="Répéter">
@@ -165,11 +190,14 @@
         </div>
         <!-- Jours de la semaine (seulement pour "Toutes les semaines") -->
         <div id="choix-jours-repetition" class="choix-jours" hidden></div>
-        <span class="aide">Ex. : anniversaire → tous les ans ; médicament matin et soir → deux tâches. Pour un traitement, suivez toujours la prescription : TDA n'est qu'un aide-mémoire.</span>
+        <label id="zone-fin-repetition" class="intervalle" hidden>
+          jusqu'au <input id="champ-fin-repetition" type="date"> <span class="aide">(vide = pas d'arrêt prévu)</span>
+        </label>
       </div>
 
       <div class="actions-dialogue">
         <button type="button" id="bouton-supprimer" class="bouton-danger" hidden>Supprimer</button>
+        <button type="button" id="bouton-supprimer-serie" class="bouton-danger" hidden>Supprimer toute la série</button>
         <span class="espace"></span>
         <button type="button" id="bouton-annuler" class="bouton-secondaire">Annuler</button>
         <button type="submit" class="bouton-principal">Enregistrer</button>
@@ -241,13 +269,14 @@
 
   <!-- ============ LES SCRIPTS ============
        L'ORDRE COMPTE : chaque fichier utilise ceux chargés avant lui.
-       config → stockage → moments → priorite → rappels → recurrence → push → app -->
+       config → stockage → moments → priorite → rappels → recurrence → modeles → push → app -->
   <script src="js/config.js"></script>
   <script src="js/stockage.js"></script>
   <script src="js/moments.js"></script>
   <script src="js/priorite.js"></script>
   <script src="js/rappels.js"></script>
   <script src="js/recurrence.js"></script>
+  <script src="js/modeles.js"></script>
   <script src="js/push.js"></script>
   <script src="js/app.js"></script>
 </body>

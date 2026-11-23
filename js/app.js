@@ -288,6 +288,17 @@ TDA.app = (function () {
   // La copie garde l'état d'avant, pour pouvoir tout annuler.
   function faireRecurrente(t) {
     const maintenant = new Date();
+    // Faite en avance (avant son rappel) → on part du rappel prévu ; sinon de maintenant.
+    const depart = new Date(Math.max(maintenant, new Date(t.rappel)));
+    const prochaine = TDA.recurrence.suivante(t.recurrence, depart);
+
+    // Plus de date après celle-ci (fin du traitement…) : la tâche est simplement terminée.
+    if (!prochaine) {
+      t.faiteLe = maintenant.toISOString();
+      sauverEtAfficher();
+      return afficherBandeau('C\'était la dernière fois : terminé ! 🎉', 'Annuler', () => defaire(t.id));
+    }
+
     const copie = structuredClone(t);
     copie.id = nouvelId();
     copie.recurrence = null;
@@ -297,9 +308,7 @@ TDA.app = (function () {
                     reporteJusqua: t.reporteJusqua, etapes: structuredClone(t.etapes || []) };
     etat.taches.push(copie);
 
-    // Faite en avance (avant son rappel) → on part du rappel prévu ; sinon de maintenant.
-    const depart = new Date(Math.max(maintenant, new Date(t.rappel)));
-    avancerRecurrente(t, TDA.recurrence.suivante(t.recurrence, depart), false);
+    avancerRecurrente(t, prochaine, false);
     t.reporteJusqua = null;
     (t.etapes || []).forEach(e => { e.fait = false; });     // les étapes repartent à zéro
 
@@ -343,7 +352,7 @@ TDA.app = (function () {
     for (const t of etat.taches) {
       if (!t.recurrence || t.faiteLe || !t.rappel) continue;
       let prochaine = TDA.recurrence.suivante(t.recurrence, new Date(t.rappel));
-      for (let securite = 0; prochaine <= maintenant && securite < 1000; securite++) {
+      for (let securite = 0; prochaine && prochaine <= maintenant && securite < 1000; securite++) {
         avancerRecurrente(t, prochaine, dejaSonne);
         prochaine = TDA.recurrence.suivante(t.recurrence, prochaine);
         change = true;
@@ -474,6 +483,14 @@ TDA.app = (function () {
     const rappelPropose = new Date(Date.now() + TDA.config.RAPPEL_PAR_DEFAUT_MINUTES * 60000).toISOString();
     $('champ-rappel').value = versChampDate(t && !t.rappelEnvoye && t.rappel ? t.rappel : rappelPropose);
     afficherRepetition(t ? t.recurrence : null);
+    // "Répéter" ne sert qu'à personnaliser une tâche existante :
+    // pour en créer une, il y a l'assistant « 🔁 Rappel récurrent ».
+    $('bloc-repetition').hidden = !t;
+    // Une tâche d'une série (prises d'un médicament, anniversaire + cadeau) :
+    // on propose aussi de supprimer toute la série d'un coup.
+    const serie = t && t.groupe ? etat.taches.filter(x => x.groupe === t.groupe && !x.faiteLe) : [];
+    $('bouton-supprimer-serie').hidden = serie.length < 2;
+    $('bouton-supprimer-serie').textContent = `Supprimer toute la série (${serie.length})`;
 
     $('dialogue-tache').showModal();
     $('champ-titre').focus();
@@ -572,6 +589,8 @@ TDA.app = (function () {
     $('choix-jours-repetition').innerHTML = ORDRE_JOURS.map(j => `
       <button type="button" class="jour ${jours.includes(j) ? 'actif' : ''}" data-jour-repetition="${j}"
               aria-pressed="${jours.includes(j)}">${NOMS_JOURS[j]}</button>`).join('');
+    // Date de fin (champ "date" = "2026-12-10", en heure locale)
+    $('champ-fin-repetition').value = regle && regle.fin ? versChampDate(regle.fin).slice(0, 10) : '';
     majChampsRepetition();
   }
 
@@ -580,6 +599,7 @@ TDA.app = (function () {
     const unite = $('champ-repetition').value;
     $('zone-intervalle').hidden = !unite;
     $('choix-jours-repetition').hidden = unite !== 'semaine';
+    $('zone-fin-repetition').hidden = !unite;
     if (!unite) return;
     const n = Number($('champ-intervalle').value) || 1;
     $('unite-intervalle').textContent = UNITES[unite][n > 1 ? 1 : 0];
@@ -599,7 +619,205 @@ TDA.app = (function () {
       ? [...$('choix-jours-repetition').querySelectorAll('.actif')].map(b => Number(b.dataset.jourRepetition))
       : [];
     const intervalle = Math.min(99, Math.max(1, Math.floor(Number($('champ-intervalle').value) || 1)));
-    return { unite, intervalle, jours, ancre: rappelIso };
+    const finTexte = $('champ-fin-repetition').value;   // vide = pas d'arrêt prévu
+    const fin = finTexte ? TDA.recurrence.finDeJournee(new Date(finTexte + 'T12:00')).toISOString() : null;
+    return { unite, intervalle, jours, ancre: rappelIso, fin };
+  }
+
+  /* ------------------------------------------------------------------
+     5 bis. L'ASSISTANT « RAPPEL RÉCURRENT » (modèles dans js/modeles.js)
+     ------------------------------------------------------------------ */
+  let modeleChoisi = null;
+
+  // Étape 1 : les cartes des modèles
+  function ouvrirAssistant() {
+    modeleChoisi = null;
+    $('titre-recurrent').textContent = 'Nouveau rappel récurrent';
+    $('etape-modeles').innerHTML = TDA.modeles.liste.map(m => `
+      <button type="button" class="carte-modele" data-modele="${m.id}">
+        <span class="emoji-modele">${m.emoji}</span>
+        <strong>${m.nom}</strong>
+        <span>${m.exemples}</span>
+      </button>`).join('');
+    $('etape-modeles').hidden = false;
+    $('etape-questions').hidden = true;
+    $('bouton-retour-modeles').hidden = true;
+    $('bouton-creer-recurrent').hidden = true;
+    $('dialogue-recurrent').showModal();
+  }
+
+  // Étape 2 : les questions du modèle choisi
+  function choisirModele(id) {
+    modeleChoisi = TDA.modeles.trouver(id);
+    $('titre-recurrent').textContent = modeleChoisi.emoji + ' ' + modeleChoisi.nom;
+    $('description-modele').textContent = modeleChoisi.description;
+    $('champs-modele').innerHTML = modeleChoisi.champs.map(htmlChamp).join('');
+    $('etape-modeles').hidden = true;
+    $('etape-questions').hidden = false;
+    $('bouton-retour-modeles').hidden = false;
+    $('bouton-creer-recurrent').hidden = false;
+    majQuestions();
+    const premier = $('champs-modele').querySelector('input[type="text"]');
+    if (premier) premier.focus();
+  }
+
+  // La valeur par défaut d'un champ (une valeur, ou une fonction qui la calcule)
+  function valeurParDefaut(champ) {
+    return typeof champ.defaut === 'function' ? champ.defaut() : champ.defaut;
+  }
+
+  // Fabrique le HTML d'UNE question, selon son type.
+  // Chaque bloc porte data-bloc="id" (pour pouvoir le cacher : option "si").
+  function htmlChamp(c) {
+    const d = valeurParDefaut(c);
+    const aide = c.aide ? `<span class="aide">${c.aide}</span>` : '';
+    const titre = c.label ? `<span>${c.label}</span>` : '';
+    switch (c.type) {
+      case 'texte':
+        return `<label class="champ" data-bloc="${c.id}">${titre}
+          <input type="text" data-champ="${c.id}" maxlength="120" placeholder="${proteger(c.placeholder || '')}" autocomplete="off">${aide}</label>`;
+      case 'date':
+        return `<label class="champ" data-bloc="${c.id}">${titre}<input type="date" data-champ="${c.id}" value="${d || ''}">${aide}</label>`;
+      case 'heure':
+        return `<label class="champ" data-bloc="${c.id}">${titre}<input type="time" data-champ="${c.id}" value="${d || '09:00'}">${aide}</label>`;
+      case 'nombre':
+        return `<label class="champ" data-bloc="${c.id}">${titre}
+          <span class="ligne-nombre"><input type="number" inputmode="numeric" data-champ="${c.id}" min="${c.min || 1}" max="${c.max || 99}" value="${d || 1}"> ${c.suffixe || ''}</span>${aide}</label>`;
+      case 'choix':
+        return `<fieldset class="champ" data-bloc="${c.id}">${c.label ? `<legend>${c.label}</legend>` : ''}
+          <div class="choix-pilules">${c.options.map(([valeur, texte]) => `
+            <label><input type="radio" name="modele-${c.id}" data-champ="${c.id}" value="${valeur}" ${valeur === d ? 'checked' : ''}>${texte}</label>`).join('')}
+          </div>${aide}</fieldset>`;
+      case 'jours':
+        return `<fieldset class="champ" data-bloc="${c.id}"><legend>${c.label}</legend>
+          <div class="choix-jours" data-jours="${c.id}">${ORDRE_JOURS.map(j => `
+            <button type="button" class="jour ${j === new Date().getDay() ? 'actif' : ''}" data-jour="${j}"
+                    aria-pressed="${j === new Date().getDay()}">${NOMS_JOURS[j]}</button>`).join('')}</div>${aide}</fieldset>`;
+      case 'heures':
+        return `<fieldset class="champ" data-bloc="${c.id}"><legend>${c.label}</legend>
+          <div class="liste-heures" data-heures="${c.id}"></div>${aide}</fieldset>`;
+      case 'moment':
+        return `<label class="champ" data-bloc="${c.id}">${titre}
+          <select data-champ="${c.id}">${TDA.moments.tous(etat.moments).map(m =>
+            `<option value="${m.id}" ${m.id === d ? 'selected' : ''}>${m.emoji} ${proteger(m.nom)}</option>`).join('')}</select></label>`;
+      case 'etiquettes':
+        return `<fieldset class="champ" data-bloc="${c.id}"><legend>${c.label}</legend>
+          <div class="choix-etiquettes" data-etiquettes="${c.id}">${TDA.config.ETIQUETTES.map(e =>
+            `<label style="--c:${e.couleur}"><input type="checkbox" value="${e.id}">${e.emoji} ${e.nom}</label>`).join('')}</div></fieldset>`;
+    }
+    return '';
+  }
+
+  // Lit la réponse d'une question (texte, nombre, liste de jours…)
+  function lireChamp(c) {
+    const zone = $('champs-modele');
+    switch (c.type) {
+      case 'choix': {
+        const coche = zone.querySelector(`[data-champ="${c.id}"]:checked`);
+        return coche ? coche.value : valeurParDefaut(c);
+      }
+      case 'nombre': {
+        const el = zone.querySelector(`[data-champ="${c.id}"]`);
+        return Math.min(c.max || 99, Math.max(c.min || 1, Math.floor(Number(el.value) || c.min || 1)));
+      }
+      case 'jours':
+        return [...zone.querySelectorAll(`[data-jours="${c.id}"] .actif`)].map(b => Number(b.dataset.jour));
+      case 'heures':
+        return [...zone.querySelectorAll(`[data-heures="${c.id}"] input`)].map(i => i.value).filter(Boolean);
+      case 'etiquettes':
+        return [...zone.querySelectorAll(`[data-etiquettes="${c.id}"] input:checked`)].map(i => i.value);
+      default: {
+        const el = zone.querySelector(`[data-champ="${c.id}"]`);
+        return el ? el.value.trim() : '';
+      }
+    }
+  }
+
+  function lireReponses() {
+    const r = {};
+    for (const c of modeleChoisi.champs) r[c.id] = lireChamp(c);
+    return r;
+  }
+
+  // Une question est-elle visible ? (option "si" : { autreChamp: valeur })
+  function estVisible(c, reponses) {
+    if (!c.si) return true;
+    return Object.entries(c.si).every(([id, valeur]) => reponses[id] === valeur);
+  }
+
+  // Après chaque réponse : on montre/cache les questions conditionnelles,
+  // et on ajuste la liste des heures au nombre de prises.
+  function majQuestions() {
+    if (!modeleChoisi) return;
+    const r = lireReponses();
+    for (const c of modeleChoisi.champs) {
+      $('champs-modele').querySelector(`[data-bloc="${c.id}"]`).hidden = !estVisible(c, r);
+      if (c.type === 'heures') {
+        const zone = $('champs-modele').querySelector(`[data-heures="${c.id}"]`);
+        const n = Number(r[c.selon]) || 1;
+        const actuelles = [...zone.querySelectorAll('input')].map(i => i.value);
+        if (actuelles.length !== n) {
+          const proposees = c.proposees(n) || [];
+          // On garde les heures déjà saisies, on complète avec les heures proposées.
+          zone.innerHTML = Array.from({ length: n }, (_, i) =>
+            `<label class="heure-prise"><span>${n > 1 ? 'Prise ' + (i + 1) : 'Heure'}</span>
+              <input type="time" value="${(n === actuelles.length ? actuelles[i] : null) || proposees[i] || '09:00'}"></label>`).join('');
+        }
+      }
+    }
+  }
+
+  // Vérifie les réponses obligatoires ; renvoie un message d'erreur ou null.
+  function verifierReponses(r) {
+    for (const c of modeleChoisi.champs) {
+      if (!c.requis || !estVisible(c, r)) continue;
+      const v = r[c.id];
+      if (Array.isArray(v) ? !v.length : !v) {
+        return `Il manque une réponse : « ${c.label || c.id} ».`;
+      }
+    }
+    return null;
+  }
+
+  // "Créer" : le modèle fabrique les tâches, on les ajoute à la liste.
+  function creerRecurrent(evenement) {
+    evenement.preventDefault();
+    const r = lireReponses();
+    const erreur = verifierReponses(r);
+    if (erreur) return afficherBandeau(erreur);
+
+    let nouvelles;
+    try { nouvelles = modeleChoisi.construire(r); }
+    catch (e) { return afficherBandeau(e.message); }
+
+    // Plusieurs tâches créées ensemble (prises d'un médicament, anniversaire
+    // + cadeau) forment une "série" : on pourra les supprimer d'un coup.
+    const groupe = nouvelles.length > 1 ? 'g-' + nouvelId() : null;
+    const maintenant = new Date().toISOString();
+    for (const t of nouvelles) {
+      etat.taches.push({ id: nouvelId(), ...t, groupe, rappelEnvoye: false, creeLe: maintenant, faiteLe: null, reporteJusqua: null });
+    }
+    if (TDA.rappels.disponibles() && Notification.permission === 'default') TDA.rappels.demanderAutorisation();
+
+    $('dialogue-recurrent').close();
+    sauverEtAfficher();
+    const prochain = nouvelles.map(t => t.rappel).sort()[0];
+    afficherBandeau(`${pluriel(nouvelles.length, 'rappel')} créé${nouvelles.length > 1 ? 's' : ''} 🔁 Prochain : ${dateLisible(prochain)}`);
+  }
+
+  // Supprime toutes les tâches à faire d'une même série (l'historique des
+  // fois "faites" est gardé). Avec la fenêtre de confirmation de l'appli.
+  async function supprimerSerie() {
+    const t = trouverTache(etat.tacheEnEdition);
+    if (!t || !t.groupe) return;
+    const serie = etat.taches.filter(x => x.groupe === t.groupe && !x.faiteLe);
+    $('dialogue-tache').close();
+    const ok = await demanderConfirmation('Supprimer toute la série ?',
+      serie.map(x => '• ' + x.titre).join('\n'), 'Supprimer les ' + serie.length);
+    if (!ok) return;
+    etat.taches = etat.taches.filter(x => !(x.groupe === t.groupe && !x.faiteLe));
+    sauverEtAfficher();
+    afficherBandeau(pluriel(serie.length, 'rappel') + ' supprimé' + (serie.length > 1 ? 's' : '') + '.');
   }
 
   // Les boutons "Dans 15 min", "Dans 1 h", "Demain 9 h", "Aucun"
@@ -914,6 +1132,24 @@ TDA.app = (function () {
       b.setAttribute('aria-pressed', b.classList.contains('actif'));
     });
     $('liste-recurrentes').addEventListener('click', surClicListe);
+    $('bouton-supprimer-serie').addEventListener('click', supprimerSerie);
+
+    // L'assistant « Rappel récurrent »
+    $('bouton-ajouter-recurrent').addEventListener('click', ouvrirAssistant);
+    $('etape-modeles').addEventListener('click', e => {
+      const carte = e.target.closest('[data-modele]');
+      if (carte) choisirModele(carte.dataset.modele);
+    });
+    $('champs-modele').addEventListener('click', e => {
+      const jour = e.target.closest('[data-jour]');
+      if (!jour) return;
+      jour.classList.toggle('actif');
+      jour.setAttribute('aria-pressed', jour.classList.contains('actif'));
+    });
+    $('champs-modele').addEventListener('change', majQuestions);
+    $('bouton-retour-modeles').addEventListener('click', ouvrirAssistant);
+    $('bouton-annuler-recurrent').addEventListener('click', () => $('dialogue-recurrent').close());
+    $('formulaire-recurrent').addEventListener('submit', creerRecurrent);
 
     $('voir-tout').addEventListener('change', e => { etat.voirTout = e.target.checked; afficher(); });
 
