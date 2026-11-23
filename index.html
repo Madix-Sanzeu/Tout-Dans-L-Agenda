@@ -179,10 +179,12 @@
       </div>
 
       <h3>Sauvegarde</h3>
-      <p class="info">Vos données sont uniquement sur cet appareil. Exportez-les de temps en temps.</p>
+      <p class="info">Vos tâches sont uniquement sur cet appareil. Si vous videz le navigateur ou changez de téléphone, seul un fichier de sauvegarde permet de les retrouver. Gardez-le où vous voulez : Drive, e-mail à vous-même…</p>
+      <p id="etat-sauvegarde" class="info"></p>
       <div class="raccourcis">
-        <button type="button" id="bouton-exporter">⬇️ Exporter</button>
-        <label class="bouton-fichier">⬆️ Importer<input type="file" id="champ-importer" accept="application/json" hidden></label>
+        <button type="button" id="bouton-exporter">💾 Sauvegarder</button>
+        <!-- accept : .txt aussi, car certains téléphones n'acceptent de partager que ce format -->
+        <label class="bouton-fichier">📂 Restaurer<input type="file" id="champ-importer" accept=".json,.txt,application/json,text/plain" hidden></label>
       </div>
 
       <div class="actions-dialogue">

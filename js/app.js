@@ -477,6 +477,7 @@ TDA.app = (function () {
     momentsBrouillon = structuredClone(etat.moments);
     afficherEditeurMoments();
     afficherEtatNotifications();
+    afficherEtatSauvegarde();
     $('dialogue-reglages').showModal();
   }
 
@@ -601,37 +602,111 @@ TDA.app = (function () {
     afficherEtatNotifications();
   }
 
-  function exporter() {
-    const texte = JSON.stringify(TDA.stockage.exporter(), null, 2);
-    const lien = document.createElement('a');
-    lien.href = URL.createObjectURL(new Blob([texte], { type: 'application/json' }));
-    lien.download = 'tda-sauvegarde-' + new Date().toISOString().slice(0, 10) + '.json';
-    lien.click();
-    setTimeout(() => URL.revokeObjectURL(lien.href), 1000);
-    // Plan B si le téléchargement est bloqué : on copie aussi la sauvegarde.
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(texte)
-        .then(() => afficherBandeau('Sauvegarde téléchargée (et copiée dans le presse-papiers).'))
-        .catch(() => {});
-    }
+  /* ---------- La sauvegarde dans un fichier ----------
+     Les tâches ne sont que sur l'appareil. Pour ne pas les perdre (navigateur
+     vidé, changement de téléphone), on fabrique un petit fichier texte (JSON)
+     que la personne range où elle veut, puis "Restaurer" le relit. */
+
+  // Nombre de jours entiers écoulés depuis une date ISO (null si pas de date).
+  function joursDepuis(iso) {
+    if (!iso) return null;
+    return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
   }
 
+  // Le petit texte "Dernière sauvegarde : …" dans les réglages.
+  function afficherEtatSauvegarde() {
+    const jours = joursDepuis(TDA.stockage.lireDerniereSauvegarde());
+    let message;
+    if (jours === null) message = '⚠️ Aucune sauvegarde pour l\'instant.';
+    else if (jours === 0) message = '✅ Dernière sauvegarde : aujourd\'hui.';
+    else if (jours === 1) message = '✅ Dernière sauvegarde : hier.';
+    else message = (jours > TDA.config.SAUVEGARDE_RAPPEL_JOURS ? '⚠️' : '✅')
+      + ' Dernière sauvegarde : il y a ' + jours + ' jours.';
+    $('etat-sauvegarde').textContent = message;
+  }
+
+  // Bouton "Sauvegarder".
+  // 1. Sur téléphone, on ouvre le menu "Partager" : la personne envoie le
+  //    fichier vers Drive, ses e-mails, WhatsApp… (navigator.share).
+  // 2. Sinon (ordinateur, vieux navigateur), on le télécharge.
+  async function exporter() {
+    const texte = JSON.stringify(TDA.stockage.exporter(), null, 2);
+    const nom = 'tda-sauvegarde-' + new Date().toISOString().slice(0, 10);
+
+    // Certains téléphones refusent de partager un .json : on tente alors un .txt
+    // (même contenu ; "Restaurer" accepte les deux).
+    const essais = [
+      new File([texte], nom + '.json', { type: 'application/json' }),
+      new File([texte], nom + '.txt', { type: 'text/plain' })
+    ];
+    const fichier = navigator.canShare ? essais.find(f => navigator.canShare({ files: [f] })) : null;
+
+    if (fichier) {
+      try {
+        await navigator.share({ files: [fichier], title: 'Sauvegarde Tout Dans l\'Agenda' });
+        sauvegardeReussie();
+      } catch (e) {
+        // "AbortError" = la personne a fermé le menu : ce n'est pas une erreur.
+        if (e.name !== 'AbortError') telecharger(texte, nom + '.json');
+      }
+      return;
+    }
+    telecharger(texte, nom + '.json');
+  }
+
+  // Téléchargement classique d'un fichier fabriqué dans la page.
+  function telecharger(texte, nomFichier) {
+    const lien = document.createElement('a');
+    lien.href = URL.createObjectURL(new Blob([texte], { type: 'application/json' }));
+    lien.download = nomFichier;
+    lien.click();
+    setTimeout(() => URL.revokeObjectURL(lien.href), 1000);
+    sauvegardeReussie();
+  }
+
+  function sauvegardeReussie() {
+    TDA.stockage.noterSauvegarde();
+    afficherEtatSauvegarde();
+    afficherBandeau('Sauvegarde faite. 💾 Gardez bien ce fichier.');
+  }
+
+  // Bouton "Restaurer" : on relit un fichier de sauvegarde.
   function importer(evenement) {
     const fichier = evenement.target.files[0];
+    evenement.target.value = ''; // pour pouvoir choisir 2 fois le même fichier
     if (!fichier) return;
     fichier.text().then(texte => {
-      try {
-        if (!TDA.stockage.importer(JSON.parse(texte))) throw new Error('format');
-        etat.taches = TDA.stockage.lireTaches();
-        etat.moments = TDA.stockage.lireMoments();
-        $('dialogue-reglages').close();
-        afficher();
-        afficherBandeau('Sauvegarde importée.');
-      } catch (e) {
+      let donnees;
+      try { donnees = JSON.parse(texte); } catch (e) { donnees = null; }
+      if (!donnees || !Array.isArray(donnees.taches)) {
         afficherBandeau('Ce fichier n\'est pas une sauvegarde TDA valide.');
+        return;
       }
-      evenement.target.value = '';
+      // La restauration REMPLACE la liste actuelle : on prévient avant.
+      if (etat.taches.length && !confirm('Remplacer vos ' + etat.taches.length
+          + ' tâches actuelles par les ' + donnees.taches.length + ' de la sauvegarde ?')) return;
+
+      TDA.stockage.importer(donnees);
+      etat.taches = TDA.stockage.lireTaches();
+      etat.moments = TDA.stockage.lireMoments();
+      TDA.push.planifierSynchro(etat.taches); // met à jour les rappels push s'ils sont activés
+      $('dialogue-reglages').close();
+      afficher();
+      const n = donnees.taches.length;
+      afficherBandeau(n + (n > 1 ? ' tâches restaurées.' : ' tâche restaurée.'));
     });
+  }
+
+  // Au démarrage : si on a des tâches et pas de sauvegarde récente,
+  // on le propose gentiment (au plus une fois par jour, sans bloquer).
+  function proposerSauvegarde() {
+    if (!etat.taches.length) return;
+    const jours = joursDepuis(TDA.stockage.lireDerniereSauvegarde());
+    if (jours !== null && jours < TDA.config.SAUVEGARDE_RAPPEL_JOURS) return;
+    if (joursDepuis(TDA.stockage.lireDernierRappelSauvegarde()) === 0) return;
+    TDA.stockage.noterRappelSauvegarde();
+    afficherBandeau(jours === null ? 'Vos tâches ne sont pas encore sauvegardées.'
+      : 'Pas de sauvegarde depuis ' + jours + ' jours.', 'Sauvegarder', exporter);
   }
 
   /* ------------------------------------------------------------------
@@ -700,6 +775,11 @@ TDA.app = (function () {
     brancherEvenements();
     tic();
     setInterval(tic, TDA.config.INTERVALLE_RAPPELS_MS);
+
+    // Protection des données : on demande au navigateur de ne pas les effacer
+    // de lui-même, et on propose une sauvegarde si la dernière est ancienne.
+    TDA.stockage.demanderPersistance();
+    setTimeout(proposerSauvegarde, 3000); // après 3 s, pour ne pas tout montrer d'un coup
 
     // Le "service worker" (sw.js) permet l'installation et le hors-ligne.
     // Il ne fonctionne que si la page est servie par un serveur web (http/https),

@@ -185,7 +185,10 @@ Une tâche ressemble à ceci (c'est du **JSON**, un format texte pour décrire d
 
 Les dates sont en heure universelle (le `Z` final) ; l'affichage les convertit en heure locale.
 
-⚠️ Si l'utilisateur efface les données de son navigateur, ses tâches disparaissent. D'où les boutons **Exporter / Importer** dans les réglages : ils produisent un fichier `.json` de sauvegarde.
+⚠️ Si l'utilisateur efface les données de son navigateur, ses tâches disparaissent. Trois protections, toutes sans serveur :
+- **Stockage persistant** : au démarrage, `TDA.stockage.demanderPersistance()` demande au navigateur de ne pas effacer les données de lui-même (manque de place). Ça ne protège pas d'un effacement manuel.
+- **Sauvegarder / Restaurer** (réglages) : un fichier `.json` (ou `.txt` si le téléphone refuse le `.json`). Sur téléphone, « Sauvegarder » ouvre le menu Partager (`navigator.share`) pour l'envoyer vers Drive, e-mail… ; sinon le fichier est téléchargé. « Restaurer » demande confirmation avant de remplacer la liste. C'est aussi la façon de changer de téléphone.
+- **Rappel doux** : au démarrage, s'il y a des tâches et aucune sauvegarde depuis `SAUVEGARDE_RAPPEL_JOURS` (config.js, 14 j), un bandeau propose de sauvegarder (au plus une fois par jour).
 
 **Phase 3 (comptes en ligne) :** seul `stockage.js` devra changer. Le reste de l'appli ne sait pas *où* sont rangées les données, il appelle simplement `TDA.stockage.lireTaches()`.
 

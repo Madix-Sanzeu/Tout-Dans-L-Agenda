@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 23/11/2026 : phase 2 (mise en ligne) quasiment terminée._
+_Mis à jour le 23/11/2026 : phase 2 quasiment terminée + sauvegarde des données ajoutée._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -22,14 +22,17 @@ _Mis à jour le 23/11/2026 : phase 2 (mise en ligne) quasiment terminée._
 - Phase 2, côté serveur, **déployé et testé** (abonnement, synchronisation, refus d'un mauvais secret, planificateur chaque minute, effacement après envoi) ; contrôle de sécurité Supabase OK (`pg_net` déplacé hors du schéma public).
 - L'appli est branchée sur le serveur (`PUSH` rempli dans `js/config.js`) et publiée sur GitHub Pages.
 - Clés VAPID générées : la publique est dans le code, la privée dans `CLES-PRIVEES-NE-PAS-PUBLIER.txt` (dossier local uniquement, exclu de Git).
+- Sauvegarde des tâches (sans serveur) : stockage persistant, boutons « Sauvegarder » (menu Partager sur téléphone) / « Restaurer » (avec confirmation), rappel doux après 14 jours sans sauvegarde. Testé dans Chrome (ordinateur) ; `sw.js` passé en `tda-v5`. **Pas encore publié sur GitHub.**
 - Tests dans un navigateur : appli, réglages et pages OK, aucune erreur ; fonctions serveur vérifiées pour la syntaxe uniquement (pas d'environnement Deno ici).
 
 ## Reste à faire pour finir la phase 2
+0. **Publier la sauvegarde** (commit + push), puis tester « Sauvegarder » sur Android et iPhone (menu Partager) et « Restaurer » sur un autre appareil.
 1. **Tester un vrai rappel appli fermée**, d'abord sur Android, puis sur iPhone (appli ajoutée à l'écran d'accueil). En cas de souci : Supabase → Edge Functions → `tda-envoi` → Logs.
 2. Relire `confidentialite.html` et `mentions-legales.html`, et choisir un contact plus simple que GitHub pour les testeurs (email, formulaire).
 3. Plus tard : choisir la plateforme de don.
 
 ## À valider avec Sandra
+- Le rappel de sauvegarde : fréquence (14 jours) et formulation, pour ne pas culpabiliser.
 - L'ordre des cases et les seuils d'urgence automatique (3 jours ; 2 h à rendre dans 7 jours).
 - « Nouveau » : la durée (48 h) et son poids faible (+3).
 - « Pas maintenant » (60 min) : faut-il limiter les reports ?

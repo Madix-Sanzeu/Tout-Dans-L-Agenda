@@ -136,6 +136,13 @@ TDA.config = {
     CLE_PUBLIQUE_VAPID: 'BBf_49_c2dGPShOcYm1KooVIgAvOc7YEZZ_8QM0rW3U70MHX8m4xkFrOGfh4W0G9gpYEC5zBlbzJV9rQpdfnB3E'
   },
 
+  /* ---------- La sauvegarde ----------
+     Les tâches ne sont que sur l'appareil : si le navigateur est vidé ou si
+     on change de téléphone, seul un fichier de sauvegarde permet de les
+     retrouver. Au-delà de ce nombre de jours sans sauvegarde, l'appli le
+     propose gentiment (au plus une fois par jour). */
+  SAUVEGARDE_RAPPEL_JOURS: 14,
+
   // Où les testeurs donnent leur avis (ici : une "issue" sur GitHub).
   LIEN_AVIS: 'https://github.com/Madix-Sanzeu/Tout-Dans-L-Agenda/issues/new',
 

@@ -5,7 +5,8 @@
    "localStorage" (un petit espace clé → texte propre à chaque site).
    - Avantage : rien ne sort du téléphone, pas de serveur, pas de RGPD.
    - Limite   : pas de synchronisation entre appareils, et si on vide
-                les données du navigateur, tout part → d'où l'export.
+                les données du navigateur, tout part → d'où la sauvegarde
+                dans un fichier (boutons "Sauvegarder" / "Restaurer").
 
    Les données sont converties en texte avec JSON.stringify (objet → texte)
    et relues avec JSON.parse (texte → objet).
@@ -60,7 +61,26 @@ TDA.stockage = (function () {
       else try { localStorage.removeItem('tda.push'); } catch (e) { /* indisponible */ }
     },
 
-    // Sauvegarde complète dans un seul objet (pour le bouton "Exporter").
+    // Demande au navigateur de NE PAS effacer nos données de lui-même
+    // (il le fait parfois quand le téléphone manque de place).
+    // Ça ne protège pas d'un effacement manuel : d'où la sauvegarde.
+    // Renvoie une "promesse" de true / false (false = refusé ou non géré).
+    demanderPersistance: function () {
+      if (!navigator.storage || !navigator.storage.persist) return Promise.resolve(false);
+      return navigator.storage.persisted()
+        .then(dejaPersistant => dejaPersistant || navigator.storage.persist())
+        .catch(() => false);
+    },
+
+    // Date (texte ISO) de la dernière sauvegarde faite, ou null si jamais.
+    lireDerniereSauvegarde: () => lire('tda.derniereSauvegarde', null),
+    noterSauvegarde: () => ecrire('tda.derniereSauvegarde', new Date().toISOString()),
+
+    // Date du dernier rappel "pensez à sauvegarder" (pour ne pas insister).
+    lireDernierRappelSauvegarde: () => lire('tda.dernierRappelSauvegarde', null),
+    noterRappelSauvegarde: () => ecrire('tda.dernierRappelSauvegarde', new Date().toISOString()),
+
+    // Sauvegarde complète dans un seul objet (pour le bouton "Sauvegarder").
     exporter: function () {
       return {
         application: 'Tout Dans l\'Agenda',
