@@ -1196,9 +1196,27 @@ TDA.app = (function () {
     afficher();
   }
 
+  // Affiche la version de l'appli en bas de page (ex. « Version tda-v11 »).
+  // Elle est lue dans le cache créé par sw.js, qui porte le nom de VERSION :
+  // ainsi il n'y a qu'un seul endroit où écrire le numéro.
+  function afficherVersion() {
+    if (!('caches' in window)) return;
+    caches.keys()
+      .then(noms => {
+        // Le plus grand numéro (tri par nombre : v10 passe après v9)
+        const numero = n => Number(n.replace('tda-v', '')) || 0;
+        const version = noms.filter(n => n.startsWith('tda-v')).sort((a, b) => numero(a) - numero(b)).pop();
+        if (version) $('version-appli').textContent = 'Version ' + version;
+      })
+      .catch(() => {});
+  }
+
   function demarrer() {
     etat.taches = TDA.stockage.lireTaches();
     etat.moments = TDA.stockage.lireMoments();
+    afficherVersion();
+    // Quand une nouvelle version vient de s'installer, on met le numéro à jour.
+    if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('controllerchange', afficherVersion);
 
     $('lien-avis').href = TDA.config.LIEN_AVIS;
     TDA.push.planifierSynchro(etat.taches); // au démarrage : rattrape les changements faits hors ligne

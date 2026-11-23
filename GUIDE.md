@@ -244,7 +244,7 @@ Les dates sont en heure universelle (le `Z` final) ; l'affichage les convertit e
 | Afficher le bouton de don | `js/config.js` | Mettre l'adresse dans `LIEN_DON` |
 | Changer une couleur générale | `css/style.css` | Variables au début du fichier (`--principal`, `--fond`…) |
 | Changer un texte affiché | `index.html` ou `js/app.js` | Chercher le texte (`Ctrl + F`) et le remplacer |
-| Publier une nouvelle version en ligne | `sw.js` | Augmenter `VERSION` (`tda-v1` → `tda-v2`), sinon les téléphones gardent l'ancienne |
+| Publier une nouvelle version en ligne | `sw.js` | Augmenter `VERSION` (`tda-v1` → `tda-v2`), sinon les téléphones gardent l'ancienne. Le numéro s'affiche en bas de l'appli (« Version tda-v… ») : c'est le moyen de vérifier qu'un téléphone est à jour |
 
 ⚠️ Ne change jamais l'`id` d'une étiquette ou d'un moment déjà utilisé : les tâches existantes y font référence. Change seulement le `nom`.
 

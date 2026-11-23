@@ -302,3 +302,4 @@ button { cursor: pointer; }
 .champ .heure-prise input { width: auto; min-height: 42px; }
 #etape-questions .champ[hidden] { display: none; }
 #texte-confirmation { white-space: pre-line; }
+.version-appli { font-size: .75rem; opacity: .7; margin-top: 6px; }

@@ -13,7 +13,7 @@
    garderont l'ancienne copie.
    ===================================================================== */
 
-const VERSION = 'tda-v10';
+const VERSION = 'tda-v11';
 const FICHIERS = [
   './', 'index.html', 'aide.html', 'confidentialite.html', 'mentions-legales.html',
   'css/style.css', 'manifest.json', 'icone.svg', 'icone-192.png', 'icone-512.png',
@@ -35,8 +35,11 @@ self.addEventListener('push', (e) => {
 });
 
 // Installation : on met les fichiers en cache.
+// { cache: 'reload' } = on les télécharge VRAIMENT, sans passer par la
+// mémoire du navigateur (qui pourrait contenir une ancienne version).
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then(cache => cache.addAll(FICHIERS)));
+  e.waitUntil(caches.open(VERSION).then(cache =>
+    cache.addAll(FICHIERS.map(f => new Request(f, { cache: 'reload' })))));
   self.skipWaiting();
 });
 
@@ -49,10 +52,19 @@ self.addEventListener('activate', (e) => {
 
 // Chaque requête : on essaie le réseau d'abord (version à jour),
 // et si pas de réseau, on sert la copie en cache.
+// GitHub Pages demande au navigateur de garder les fichiers 10 minutes :
+// sans précaution, on pourrait recevoir une page neuve avec d'anciens
+// scripts. { cache: 'no-cache' } oblige à vérifier auprès du serveur que
+// le fichier n'a pas changé (rapide : rien n'est retéléchargé s'il est identique).
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  // Une page (navigation) ne peut pas être recopiée avec des options :
+  // on la redemande par son adresse.
+  const demande = e.request.mode === 'navigate'
+    ? fetch(e.request.url, { cache: 'no-cache' })
+    : fetch(e.request, { cache: 'no-cache' });
   e.respondWith(
-    fetch(e.request)
+    demande
       .then(reponse => {
         const copie = reponse.clone();
         caches.open(VERSION).then(cache => cache.put(e.request, copie));
