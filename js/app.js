@@ -682,19 +682,49 @@ TDA.app = (function () {
         afficherBandeau('Ce fichier n\'est pas une sauvegarde TDA valide.');
         return;
       }
-      // La restauration REMPLACE la liste actuelle : on prévient avant.
-      if (etat.taches.length && !confirm('Remplacer vos ' + etat.taches.length
-          + ' tâches actuelles par les ' + donnees.taches.length + ' de la sauvegarde ?')) return;
-
-      TDA.stockage.importer(donnees);
-      etat.taches = TDA.stockage.lireTaches();
-      etat.moments = TDA.stockage.lireMoments();
-      TDA.push.planifierSynchro(etat.taches); // met à jour les rappels push s'ils sont activés
-      $('dialogue-reglages').close();
-      afficher();
-      const n = donnees.taches.length;
-      afficherBandeau(n + (n > 1 ? ' tâches restaurées.' : ' tâche restaurée.'));
+      // La restauration REMPLACE la liste actuelle : on prévient toujours avant.
+      const avant = etat.taches.length, apres = donnees.taches.length;
+      const date = donnees.exporteLe ? new Date(donnees.exporteLe).toLocaleDateString('fr-FR') : '?';
+      demanderConfirmation('Restaurer la sauvegarde ?',
+        'Sauvegarde du ' + date + ' : ' + pluriel(apres, 'tâche') + '. '
+        + (avant === 0 ? 'Votre liste actuelle est vide.'
+          : avant === 1 ? 'Elle remplacera votre tâche actuelle.'
+          : 'Elle remplacera vos ' + avant + ' tâches actuelles.'),
+        'Restaurer'
+      ).then(ok => { if (ok) restaurer(donnees); });
     });
+  }
+
+  // "3 tâches", "1 tâche"
+  function pluriel(nombre, mot) {
+    return nombre + ' ' + mot + (nombre > 1 ? 's' : '');
+  }
+
+  // Ouvre la fenêtre de confirmation et "promet" true (Confirmer) ou false (Annuler).
+  // S'utilise ainsi : demanderConfirmation(...).then(ok => { if (ok) ... });
+  function demanderConfirmation(titre, texte, texteBouton) {
+    $('titre-confirmation').textContent = titre;
+    $('texte-confirmation').textContent = texte;
+    $('bouton-confirmation-oui').textContent = texteBouton;
+    const dialogue = $('dialogue-confirmation');
+    return new Promise(resoudre => {
+      const repondre = (reponse) => { dialogue.close(); resoudre(reponse); };
+      $('bouton-confirmation-oui').onclick = () => repondre(true);
+      $('bouton-confirmation-non').onclick = () => repondre(false);
+      dialogue.oncancel = () => resoudre(false); // touche "retour" / Échap
+      dialogue.showModal();
+    });
+  }
+
+  // Remplace les données par celles de la sauvegarde, puis redessine.
+  function restaurer(donnees) {
+    TDA.stockage.importer(donnees);
+    etat.taches = TDA.stockage.lireTaches();
+    etat.moments = TDA.stockage.lireMoments();
+    TDA.push.planifierSynchro(etat.taches); // met à jour les rappels push s'ils sont activés
+    $('dialogue-reglages').close();
+    afficher();
+    afficherBandeau(pluriel(donnees.taches.length, 'tâche') + ' restaurée' + (donnees.taches.length > 1 ? 's.' : '.'));
   }
 
   // Au démarrage : si on a des tâches et pas de sauvegarde récente,

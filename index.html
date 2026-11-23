@@ -195,6 +195,20 @@
     </div>
   </dialog>
 
+  <!-- ============ FENÊTRE : CONFIRMATION ============ -->
+  <!-- Utilisée avant une action qu'on ne peut pas annuler (ex. restaurer).
+       On n'utilise pas confirm() du navigateur : sur téléphone, il peut
+       ne pas s'afficher (notamment au retour du sélecteur de fichiers). -->
+  <dialog id="dialogue-confirmation" class="dialogue">
+    <h2 id="titre-confirmation">Confirmer</h2>
+    <p id="texte-confirmation"></p>
+    <div class="actions-dialogue">
+      <span class="espace"></span>
+      <button type="button" id="bouton-confirmation-non" class="bouton-secondaire">Annuler</button>
+      <button type="button" id="bouton-confirmation-oui" class="bouton-principal">Confirmer</button>
+    </div>
+  </dialog>
+
   <!-- Petit message temporaire en bas de l'écran -->
   <div id="bandeau" class="bandeau" role="status" aria-live="polite" hidden></div>
 

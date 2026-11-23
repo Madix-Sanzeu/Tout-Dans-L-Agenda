@@ -22,11 +22,12 @@ _Mis à jour le 23/11/2026 : phase 2 quasiment terminée + sauvegarde des donné
 - Phase 2, côté serveur, **déployé et testé** (abonnement, synchronisation, refus d'un mauvais secret, planificateur chaque minute, effacement après envoi) ; contrôle de sécurité Supabase OK (`pg_net` déplacé hors du schéma public).
 - L'appli est branchée sur le serveur (`PUSH` rempli dans `js/config.js`) et publiée sur GitHub Pages.
 - Clés VAPID générées : la publique est dans le code, la privée dans `CLES-PRIVEES-NE-PAS-PUBLIER.txt` (dossier local uniquement, exclu de Git).
-- Sauvegarde des tâches (sans serveur) : stockage persistant, boutons « Sauvegarder » (menu Partager sur téléphone) / « Restaurer » (avec confirmation), rappel doux après 14 jours sans sauvegarde. Testé dans Chrome (ordinateur) ; `sw.js` passé en `tda-v5`. Publié sur GitHub Pages (commit 457464d).
+- Sauvegarde des tâches (sans serveur) : stockage persistant, boutons « Sauvegarder » (menu Partager sur téléphone) / « Restaurer » (avec confirmation), rappel doux après 14 jours sans sauvegarde. Testé dans Chrome (ordinateur) ; `sw.js` passé en `tda-v5`. Publié sur GitHub Pages. Testé sur Android le 24/11 : sauvegarde et restauration OK ; la confirmation native `confirm()` ne s'affichait pas → remplacée par une fenêtre de l'appli (`demanderConfirmation()` dans app.js, `sw.js` en `tda-v6`).
+- Android (MIUI) : une 2ᵉ fenêtre TDA vide peut rester dans les applis récentes après un partage. Effet du système, non corrigeable côté PWA (`launch_handler` non géré sur Chrome Android) : il suffit de la balayer.
 - Tests dans un navigateur : appli, réglages et pages OK, aucune erreur ; fonctions serveur vérifiées pour la syntaxe uniquement (pas d'environnement Deno ici).
 
 ## Reste à faire pour finir la phase 2
-0. Tester « Sauvegarder » sur Android et iPhone (menu Partager) et « Restaurer » sur un autre appareil.
+0. Tester la nouvelle confirmation de « Restaurer » sur Android, puis « Sauvegarder » / « Restaurer » sur iPhone.
 1. **Tester un vrai rappel appli fermée**, d'abord sur Android, puis sur iPhone (appli ajoutée à l'écran d'accueil). En cas de souci : Supabase → Edge Functions → `tda-envoi` → Logs.
 2. Relire `confidentialite.html` et `mentions-legales.html`, et choisir un contact plus simple que GitHub pour les testeurs (email, formulaire).
 3. Plus tard : choisir la plateforme de don.
