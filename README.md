@@ -1,6 +1,6 @@
 # Tout Dans l'Agenda (TDA)
 
-Une application web simple pour organiser ses tâches, pensée pour les personnes concernées par le TDA(H) et conçue avec une psychologue.
+Une application web simple pour organiser ses tâches, pensée pour les personnes concernées par le TDA(H) et conçue avec Learnhavior, un collectif de 3 psychologues.
 
 👉 **Ouvrir l'appli : <https://madix-sanzeu.github.io/Tout-Dans-L-Agenda/>**
 

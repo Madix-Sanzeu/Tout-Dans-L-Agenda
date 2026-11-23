@@ -1,6 +1,6 @@
 # TDA — Tout Dans l'Agenda
 
-PWA de gestion de tâches pour personnes TDA(H), conçue avec une psychologue. Le porteur du projet débute en code : il doit pouvoir lire et modifier seul.
+PWA de gestion de tâches pour personnes TDA(H), conçue avec Learnhavior (3 psychologues). Le porteur du projet débute en code : il doit pouvoir lire et modifier seul.
 
 ## Règles durables
 - HTML/CSS/JavaScript « nus », sans framework ni étape de compilation. Scripts classiques (pas de modules ES), pour que `index.html` s'ouvre aussi par double-clic.

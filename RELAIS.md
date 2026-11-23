@@ -13,7 +13,7 @@ _Mis à jour le 23/11/2026 : phase 2 quasiment terminée + sauvegarde des donné
 - Avis des testeurs : lien vers les « issues » GitHub (`LIEN_AVIS`).
 
 ## Fait ✅
-- Phase 1 et maquette pour Sandra (voir l'historique Git).
+- Phase 1 et maquette pour Learnhavior (voir l'historique Git).
 - Phase 2, côté appli :
   - `js/push.js` : activation avec consentement explicite, option « masquer les titres », désactivation qui efface les données du serveur ;
   - `sw.js` : réception des notifications push ;
@@ -32,8 +32,11 @@ _Mis à jour le 23/11/2026 : phase 2 quasiment terminée + sauvegarde des donné
 2. Relire `confidentialite.html` et `mentions-legales.html`, et choisir un contact plus simple que GitHub pour les testeurs (email, formulaire).
 3. Plus tard : choisir la plateforme de don.
 
-## À valider avec Sandra
+## À valider avec Learnhavior (3 psychologues, dont Sandra)
 - Le rappel de sauvegarde : fréquence (14 jours) et formulation, pour ne pas culpabiliser.
+- Phase 3 — récupération d'un compte chiffré (mot de passe ET e-mail perdus) : quels moyens proposer, sachant que ce public perd facilement les codes ? Code de récupération à l'inscription, clé dans le fichier de sauvegarde, autre appareil connecté, contact de confiance (proche, aidant), ou plusieurs cumulés.
+- Phase 3 — comment expliquer simplement que, sans aucun de ces moyens, les tâches sont perdues (prix d'une confidentialité réelle) ?
+- Phase 3 — comptes sans e-mail (pseudonyme seul) : acceptable pour le public ?
 - L'ordre des cases et les seuils d'urgence automatique (3 jours ; 2 h à rendre dans 7 jours).
 - « Nouveau » : la durée (48 h) et son poids faible (+3).
 - « Pas maintenant » (60 min) : faut-il limiter les reports ?
@@ -42,9 +45,9 @@ _Mis à jour le 23/11/2026 : phase 2 quasiment terminée + sauvegarde des donné
 - Imposer le découpage en étapes au-delà d'une certaine durée ?
 
 ## Phases suivantes
-- **Phase 3 — comptes avec chiffrement de bout en bout (facultatif)** : synchronisation entre appareils + copie de secours, en ne remplaçant que `js/stockage.js`. Les tâches sont chiffrées SUR le téléphone : le serveur ne stocke qu'un bloc illisible (objectif : impossibilité pour nous de voir les données, mais restauration possible si la personne perd son téléphone). RGPD renforcé, page de confidentialité à revoir, en parler avec Sandra.
+- **Phase 3 — comptes avec chiffrement de bout en bout (facultatif)** : synchronisation entre appareils + copie de secours, en ne remplaçant que `js/stockage.js`. Les tâches sont chiffrées SUR le téléphone : le serveur ne stocke qu'un bloc illisible (objectif : impossibilité pour nous de voir les données, mais restauration possible si la personne perd son téléphone). RGPD renforcé, page de confidentialité à revoir.
   - Décision du 24/11 : la « pré-3 » (sauvegarde automatique chiffrée) est fusionnée ici.
   - Écartés pour la sauvegarde : e-mail (serveur qui lit les tâches, adresse à stocker, spam, coût) ; Google Drive (validation Google, reconnexions, exclut les non-Google).
-  - Question ouverte — récupération si mot de passe ET e-mail perdus : un formulaire anonyme ne peut prouver qui est la personne, et sans clé personne ne peut déchiffrer. Pistes : code de récupération donné à l'inscription (rangé via le menu Partager), clé incluse dans le fichier de sauvegarde, autre appareil encore connecté, contact de confiance. Comptes possibles sans e-mail (pseudonyme). Garder la sauvegarde fichier en parallèle.
+  - Récupération si mot de passe ET e-mail perdus : un formulaire anonyme ne peut pas prouver qui est la personne, et sans clé personne ne peut déchiffrer → il faut un moyen de secours gardé par la personne (choix à faire avec Learnhavior, voir plus haut). Garder la sauvegarde fichier en parallèle.
   - À faire : plan en 5 points avant de commencer.
 - **Phase 4 — stores** : Android via PWABuilder ou Bubblewrap (environ 25 $ une seule fois) ; iPhone via Capacitor (Mac + environ 99 $ par an).

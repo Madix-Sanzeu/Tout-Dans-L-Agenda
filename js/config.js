@@ -69,7 +69,7 @@ TDA.config = {
 
   /* ---------- Les points DANS une même case ----------
      Ils ne changent jamais de case une tâche : ils départagent.
-     👉 C'est ici qu'on ajuste le comportement avec Sandra. */
+     👉 C'est ici qu'on ajuste le comportement avec Learnhavior (les psychologues). */
   POIDS: {
     echeanceDepassee: 50,  // l'échéance est déjà passée
     echeance24h: 40,       // échéance dans moins de 24 h
