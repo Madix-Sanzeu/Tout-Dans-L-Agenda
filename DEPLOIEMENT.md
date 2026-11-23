@@ -40,13 +40,20 @@ Téléphone ◀──(3) notification push (chiffrée)────────�
 - `supabase/functions/tda-rappels/index.ts` : reçoit les demandes de l'appli.
 - `supabase/functions/tda-envoi/index.ts` : envoie les notifications dont l'heure est arrivée.
 
-### Les étapes (Claude peut les faire une fois le compte Supabase relié)
+### État actuel (23/11/2026) : ✅ déployé
 
-1. Créer un projet Supabase « TDA », région **eu-west-3 (Paris)**, sur le compte lié à GitHub **Madix-Sanzeu**.
+- Projet Supabase **« TDA »** (identifiant `qcnxjmmcrxrnjnrzcqrn`), région Paris, organisation « madix's Org ».
+- Tableau de bord : <https://supabase.com/dashboard/project/qcnxjmmcrxrnjnrzcqrn>
+- Migrations appliquées, fonctions `tda-rappels` et `tda-envoi` déployées, secret `VAPID_PRIVATE_KEY` enregistré, planificateur actif chaque minute.
+- Testé côté serveur : abonnement, synchronisation, refus d'un mauvais secret, passage du planificateur et effacement du rappel.
+
+### Les étapes (pour refaire l'installation sur un autre projet)
+
+1. Créer un projet Supabase « TDA », région **eu-west-3 (Paris)**.
 2. Appliquer la migration `…_rappels_push.sql`.
 3. Déployer les fonctions `tda-rappels` et `tda-envoi`, **sans vérification JWT** (`verify_jwt: false`) : chacune fait sa propre vérification (secret de l'appareil pour la première, secret du planificateur pour la seconde).
-4. Ajouter le secret **`VAPID_PRIVATE_KEY`** (Edge Functions → Secrets). Sa valeur est dans le fichier `CLES-PRIVEES-NE-PAS-PUBLIER.txt` de ton dossier local. ⚠️ Ne publie jamais ce fichier.
-5. Appliquer `…_planifier_envoi.sql` en remplaçant `ADRESSE_DU_PROJET` par l'adresse du projet.
+4. Ajouter le secret **`VAPID_PRIVATE_KEY`** à la main dans le tableau de bord (**Edge Functions → Secrets**). Sa valeur est dans le fichier `CLES-PRIVEES-NE-PAS-PUBLIER.txt` de ton dossier local. ⚠️ Ne publie jamais ce fichier.
+5. Appliquer `…_planifier_envoi.sql`, en adaptant l'adresse du projet si besoin.
 6. Dans `js/config.js`, remplir `PUSH.URL_SUPABASE` et `PUSH.CLE_PUBLIQUE_SUPABASE` (la clé « publishable », qui peut être publiée sans danger), augmenter `VERSION` dans `sw.js`, puis publier.
 
 ### Vérifier que tout marche

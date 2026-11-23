@@ -131,8 +131,8 @@ TDA.config = {
      - CLE_PUBLIQUE_VAPID : la moitié PUBLIQUE de la paire de clés qui
        signe les notifications (la moitié privée reste sur le serveur). */
   PUSH: {
-    URL_SUPABASE: '',
-    CLE_PUBLIQUE_SUPABASE: '',
+    URL_SUPABASE: 'https://qcnxjmmcrxrnjnrzcqrn.supabase.co',
+    CLE_PUBLIQUE_SUPABASE: 'sb_publishable_iwidFWw7T_7poDumz1IuHg_nxdOVddf',
     CLE_PUBLIQUE_VAPID: 'BBf_49_c2dGPShOcYm1KooVIgAvOc7YEZZ_8QM0rW3U70MHX8m4xkFrOGfh4W0G9gpYEC5zBlbzJV9rQpdfnB3E'
   },
 

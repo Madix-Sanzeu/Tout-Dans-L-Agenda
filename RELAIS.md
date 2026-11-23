@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 23/11/2026 : phase 2 (mise en ligne) en cours._
+_Mis à jour le 23/11/2026 : phase 2 (mise en ligne) quasiment terminée._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -8,7 +8,7 @@ _Mis à jour le 23/11/2026 : phase 2 (mise en ligne) en cours._
 - Priorisation : article « Comment prioriser ses tâches avec un TDAH » (le-tdah-au-quotidien.com), avec la matrice d'Eisenhower (② important passe avant ③ urgent seul).
 - Rappel obligatoire ; « Nouveau » automatique (moins de 48 h).
 - Hébergement de l'appli : GitHub Pages, dépôt `Madix-Sanzeu/Tout-Dans-L-Agenda`, adresse https://madix-sanzeu.github.io/Tout-Dans-L-Agenda/
-- Rappels appli fermée : notifications push via un projet Supabase dédié « TDA », sur le compte Supabase lié à GitHub **Madix-Sanzeu** (pas le compte « madix's Org » / Max Kompte).
+- Rappels appli fermée : notifications push via un projet Supabase dédié « TDA » (`qcnxjmmcrxrnjnrzcqrn`, Paris), dans l'organisation « madix's Org », séparé de « Max Kompte ».
 - Don : décision repoussée (`LIEN_DON` vide = bouton caché).
 - Avis des testeurs : lien vers les « issues » GitHub (`LIEN_AVIS`).
 
@@ -19,16 +19,15 @@ _Mis à jour le 23/11/2026 : phase 2 (mise en ligne) en cours._
   - `sw.js` : réception des notifications push ;
   - pages `aide.html` (installation Android / iPhone), `confidentialite.html` (RGPD) et `mentions-legales.html` ;
   - liens dans le pied de page (dont « Donner mon avis »).
-- Phase 2, côté serveur (écrit, **pas encore déployé**) : `supabase/migrations/` (tables verrouillées par RLS, planificateur pg_cron) et `supabase/functions/` (`tda-rappels`, `tda-envoi`).
+- Phase 2, côté serveur, **déployé et testé** (abonnement, synchronisation, refus d'un mauvais secret, planificateur chaque minute, effacement après envoi) ; contrôle de sécurité Supabase OK (`pg_net` déplacé hors du schéma public).
+- L'appli est branchée sur le serveur (`PUSH` rempli dans `js/config.js`) et publiée sur GitHub Pages.
 - Clés VAPID générées : la publique est dans le code, la privée dans `CLES-PRIVEES-NE-PAS-PUBLIER.txt` (dossier local uniquement, exclu de Git).
 - Tests dans un navigateur : appli, réglages et pages OK, aucune erreur ; fonctions serveur vérifiées pour la syntaxe uniquement (pas d'environnement Deno ici).
 
 ## Reste à faire pour finir la phase 2
-1. **Toi :** te connecter à Supabase avec GitHub Madix-Sanzeu, puis relier ce compte à Claude (connecteur Supabase).
-2. **Claude :** créer le projet « TDA » (Paris), appliquer les migrations, déployer les 2 fonctions et remplir `PUSH` dans `js/config.js` (voir `DEPLOIEMENT.md`).
-3. **Toi :** saisir le secret `VAPID_PRIVATE_KEY` quand Supabase le demande.
-4. Tester un vrai rappel appli fermée sur Android, puis sur iPhone.
-5. Relire `confidentialite.html` et `mentions-legales.html`, et décider d'un contact plus simple que GitHub pour les testeurs (email, formulaire).
+1. **Tester un vrai rappel appli fermée**, d'abord sur Android, puis sur iPhone (appli ajoutée à l'écran d'accueil). En cas de souci : Supabase → Edge Functions → `tda-envoi` → Logs.
+2. Relire `confidentialite.html` et `mentions-legales.html`, et choisir un contact plus simple que GitHub pour les testeurs (email, formulaire).
+3. Plus tard : choisir la plateforme de don.
 
 ## À valider avec Sandra
 - L'ordre des cases et les seuils d'urgence automatique (3 jours ; 2 h à rendre dans 7 jours).

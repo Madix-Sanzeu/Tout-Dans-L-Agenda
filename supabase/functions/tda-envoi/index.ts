@@ -18,13 +18,17 @@ import webpush from 'npm:web-push@3.6.7';
 const VAPID_PUBLIQUE = 'BBf_49_c2dGPShOcYm1KooVIgAvOc7YEZZ_8QM0rW3U70MHX8m4xkFrOGfh4W0G9gpYEC5zBlbzJV9rQpdfnB3E';
 const CONTACT = 'https://madix-sanzeu.github.io/Tout-Dans-L-Agenda/';
 
-webpush.setVapidDetails(CONTACT, VAPID_PUBLIQUE, Deno.env.get('VAPID_PRIVATE_KEY')!);
 const base = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
 Deno.serve(async (req) => {
   // 1. Le secret du planificateur
   const { data: autorise } = await base.rpc('tda_verifier_cron', { secret_recu: req.headers.get('x-tda-cron') ?? '' });
   if (autorise !== true) return new Response('Interdit', { status: 403 });
+
+  // La clé privée VAPID doit avoir été saisie dans les secrets Supabase.
+  const vapidPrivee = Deno.env.get('VAPID_PRIVATE_KEY');
+  if (!vapidPrivee) return new Response('Secret VAPID_PRIVATE_KEY manquant', { status: 503 });
+  webpush.setVapidDetails(CONTACT, VAPID_PUBLIQUE, vapidPrivee);
 
   // 2. Les rappels arrivés à l'heure (500 au maximum par minute)
   const { data: rappels, error } = await base

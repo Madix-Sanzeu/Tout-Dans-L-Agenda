@@ -39,7 +39,7 @@ revoke all on public.appareils, public.rappels from anon, authenticated;
 -- que l'appel vient bien de nous.
 -- ---------------------------------------------------------------------
 create extension if not exists pg_cron;
-create extension if not exists pg_net;
+create extension if not exists pg_net schema extensions; -- hors du schéma public (recommandation Supabase)
 
 select vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'tda_cron_secret');
 
