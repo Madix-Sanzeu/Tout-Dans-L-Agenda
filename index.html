@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<!-- =====================================================================
+     index.html — LA STRUCTURE DE LA PAGE
+     ---------------------------------------------------------------------
+     Le HTML décrit CE QUI EXISTE sur la page (titres, boutons, zones).
+     - Le style (couleurs, tailles) est dans css/style.css
+     - Le comportement (clics, calculs) est dans les fichiers js/
+     Les zones vides (ex. <section id="liste">) sont remplies par app.js.
+     Un "id" est un nom unique qui permet au JavaScript de retrouver
+     un élément : document.getElementById('liste').
+     ===================================================================== -->
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <!-- Indispensable sur téléphone : la page prend la largeur de l'écran -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tout Dans l'Agenda</title>
+  <meta name="description" content="Tout Dans l'Agenda (TDA) : une appli simple pour organiser ses tâches, pensée pour les personnes TDA(H).">
+  <meta name="theme-color" content="#1f3a5f">
+  <!-- Le "manifeste" permet d'installer la page comme une appli -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icone.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icone-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ============ EN-TÊTE ============ -->
+  <header class="entete">
+    <div class="marque">
+      <img src="icone.svg" alt="" width="36" height="36">
+      <div>
+        <h1>Tout Dans l'Agenda</h1>
+        <p id="moment-actuel" class="moment-actuel">…</p>
+      </div>
+    </div>
+    <button id="bouton-reglages" class="bouton-icone" aria-label="Réglages" title="Réglages">⚙️</button>
+  </header>
+
+  <main class="contenu">
+
+    <!-- ============ LA TÂCHE À FAIRE MAINTENANT ============ -->
+    <section aria-labelledby="titre-maintenant">
+      <h2 id="titre-maintenant" class="titre-section">Maintenant</h2>
+      <div id="maintenant"></div>
+    </section>
+
+    <button id="bouton-ajouter" class="bouton-ajouter">＋ Ajouter une tâche</button>
+
+    <!-- ============ LA SUITE DE LA LISTE ============ -->
+    <section aria-labelledby="titre-ensuite">
+      <div class="ligne-titre">
+        <h2 id="titre-ensuite" class="titre-section">Ensuite</h2>
+        <label class="interrupteur">
+          <input type="checkbox" id="voir-tout">
+          <span>Tous les moments</span>
+        </label>
+      </div>
+      <p id="info-autres-moments" class="info"></p>
+      <ul id="liste" class="liste"></ul>
+    </section>
+
+    <!-- <details> = une zone repliable, ouverte au clic -->
+    <details id="zone-reportees" class="zone-repliable">
+      <summary>Reportées <span id="nb-reportees" class="compteur"></span></summary>
+      <ul id="liste-reportees" class="liste"></ul>
+    </details>
+
+    <details id="zone-faites" class="zone-repliable">
+      <summary>Faites aujourd'hui <span id="nb-faites" class="compteur"></span></summary>
+      <ul id="liste-faites" class="liste"></ul>
+    </details>
+
+    <footer class="pied">
+      <a id="lien-don" class="bouton-don" href="#" target="_blank" rel="noopener" hidden>💛 Soutenir le projet (don facultatif)</a>
+      <p>Vos tâches restent sur cet appareil.</p>
+      <nav class="liens-pied">
+        <a href="aide.html">Installer l'appli</a>
+        <a id="lien-avis" href="#" target="_blank" rel="noopener">Donner mon avis</a>
+        <a href="confidentialite.html">Confidentialité</a>
+        <a href="mentions-legales.html">Mentions légales</a>
+      </nav>
+    </footer>
+  </main>
+
+  <!-- ============ FENÊTRE : AJOUTER / MODIFIER UNE TÂCHE ============ -->
+  <!-- <dialog> est une fenêtre qui s'affiche par-dessus la page -->
+  <dialog id="dialogue-tache" class="dialogue">
+    <form id="formulaire-tache" method="dialog">
+      <h2 id="titre-dialogue-tache">Nouvelle tâche</h2>
+
+      <label class="champ">
+        <span>Quoi ? (commencez par un verbe d'action)</span>
+        <input id="champ-titre" name="titre" required maxlength="140" placeholder="Ex. : Appeler le médecin" autocomplete="off">
+      </label>
+
+      <fieldset class="champ">
+        <legend>Priorités (plusieurs possibles)</legend>
+        <div id="choix-etiquettes" class="choix-etiquettes"></div>
+        <span class="aide">« Nouveau » est ajouté automatiquement. Important = la tâche vous rapproche d'un objectif qui compte pour vous.</span>
+      </fieldset>
+
+      <label class="champ">
+        <span>Moment de vie</span>
+        <select id="champ-moment" name="moment"></select>
+      </label>
+
+      <label class="champ">
+        <span>Pour quand ?</span>
+        <input id="champ-echeance" name="echeance" type="datetime-local">
+      </label>
+      <!-- Boutons remplis par app.js à partir de HORIZONS (config.js) -->
+      <div id="raccourcis-echeance" class="raccourcis"></div>
+
+      <label class="champ">
+        <span>Durée estimée (l'appli ajoute un tiers de marge)</span>
+        <select id="champ-duree" name="duree">
+          <option value="">—</option>
+          <option value="5">5 min</option>
+          <option value="15">15 min</option>
+          <option value="30">30 min</option>
+          <option value="60">1 h</option>
+          <option value="120">2 h ou +</option>
+        </select>
+      </label>
+
+      <label class="champ">
+        <span>🪜 Découper en étapes (une par ligne, facultatif)</span>
+        <textarea id="champ-etapes" rows="3" placeholder="Scanner les justificatifs&#10;Remplir le formulaire&#10;Envoyer"></textarea>
+        <span id="aide-decouper" class="aide aide-forte" hidden>Plus d'une heure : pensez à découper jusqu'à ce que chaque étape soit facile à démarrer.</span>
+      </label>
+
+      <label class="champ">
+        <span>🔔 Me le rappeler (obligatoire)</span>
+        <input id="champ-rappel" name="rappel" type="datetime-local" required>
+      </label>
+      <div class="raccourcis">
+        <button type="button" data-rappel="15">Dans 15 min</button>
+        <button type="button" data-rappel="60">Dans 1 h</button>
+        <button type="button" data-rappel="soir">À 18 h</button>
+        <button type="button" data-rappel="demain">Demain 9 h</button>
+      </div>
+
+      <div class="actions-dialogue">
+        <button type="button" id="bouton-supprimer" class="bouton-danger" hidden>Supprimer</button>
+        <span class="espace"></span>
+        <button type="button" id="bouton-annuler" class="bouton-secondaire">Annuler</button>
+        <button type="submit" class="bouton-principal">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ============ FENÊTRE : RÉGLAGES ============ -->
+  <dialog id="dialogue-reglages" class="dialogue">
+    <div class="formulaire">
+      <h2>Réglages</h2>
+
+      <h3>Moments de vie</h3>
+      <p class="info">Les tâches d'un moment n'apparaissent que pendant ses plages horaires. Les tâches « N'importe quand » sont toujours visibles.</p>
+      <div id="editeur-moments"></div>
+      <button type="button" id="bouton-nouveau-moment" class="bouton-secondaire">＋ Nouveau moment</button>
+
+      <h3>Rappels</h3>
+      <p id="etat-notifications" class="info"></p>
+      <button type="button" id="bouton-notifications" class="bouton-secondaire">Activer les notifications</button>
+
+      <div class="bloc-push">
+        <h4>🔔 Rappels même appli fermée</h4>
+        <p id="etat-push" class="info"></p>
+        <div id="zone-activer-push">
+          <p class="info">En activant cette option, l'<strong>heure</strong> et le <strong>titre</strong> de vos rappels à venir sont envoyés à notre serveur (hébergé en Europe), uniquement pour vous prévenir. Chaque rappel est effacé dès qu'il est envoyé. Aucun compte, aucun nom, aucun email. <a href="confidentialite.html">En savoir plus</a></p>
+          <label class="interrupteur"><input type="checkbox" id="push-masquer-titres"> <span>Masquer les titres (la notification dira seulement « Une tâche vous attend »)</span></label>
+          <button type="button" id="bouton-activer-push" class="bouton-principal">J'accepte et j'active</button>
+        </div>
+        <div id="zone-desactiver-push" hidden>
+          <label class="interrupteur"><input type="checkbox" id="push-masquer-titres-actif"> <span>Masquer les titres</span></label>
+          <button type="button" id="bouton-desactiver-push" class="bouton-danger">Désactiver et effacer mes données du serveur</button>
+        </div>
+      </div>
+
+      <h3>Sauvegarde</h3>
+      <p class="info">Vos données sont uniquement sur cet appareil. Exportez-les de temps en temps.</p>
+      <div class="raccourcis">
+        <button type="button" id="bouton-exporter">⬇️ Exporter</button>
+        <label class="bouton-fichier">⬆️ Importer<input type="file" id="champ-importer" accept="application/json" hidden></label>
+      </div>
+
+      <div class="actions-dialogue">
+        <span class="espace"></span>
+        <button type="button" id="bouton-fermer-reglages" class="bouton-secondaire">Annuler</button>
+        <button type="button" id="bouton-enregistrer-reglages" class="bouton-principal">Enregistrer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Petit message temporaire en bas de l'écran -->
+  <div id="bandeau" class="bandeau" role="status" aria-live="polite" hidden></div>
+
+  <!-- ============ LES SCRIPTS ============
+       L'ORDRE COMPTE : chaque fichier utilise ceux chargés avant lui.
+       config → stockage → moments → priorite → rappels → push → app -->
+  <script src="js/config.js"></script>
+  <script src="js/stockage.js"></script>
+  <script src="js/moments.js"></script>
+  <script src="js/priorite.js"></script>
+  <script src="js/rappels.js"></script>
+  <script src="js/push.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

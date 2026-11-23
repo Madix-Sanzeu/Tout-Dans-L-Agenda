@@ -1,0 +1,263 @@
+/* =====================================================================
+   style.css — L'APPARENCE
+   ---------------------------------------------------------------------
+   Principe : une règle CSS = "sélecteur { propriété: valeur; }".
+   - .nom     cible les éléments qui ont class="nom"
+   - #nom     cible l'élément qui a id="nom"
+   Les couleurs sont rangées dans des "variables" (--nom) au début :
+   on change une couleur à un seul endroit, elle change partout.
+
+   Choix de design pour un public TDA(H) :
+   - une seule tâche mise en avant ("Maintenant") pour éviter la surcharge ;
+   - des couleurs calmes, des contrastes nets, de gros boutons ;
+   - peu d'animations (et aucune si l'appareil demande "réduire les animations").
+   ===================================================================== */
+
+:root {
+  --fond: #f5f3ee;
+  --carte: #ffffff;
+  --texte: #1d2433;
+  --texte-doux: #5c6577;
+  --bordure: #e3e0d8;
+  --principal: #1f3a5f;
+  --principal-clair: #e6edf6;
+  --succes: #2b8a3e;
+  --danger: #c92a2a;
+  --ombre: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(31,58,95,.07);
+  --rayon: 16px;
+  font-size: 17px;
+}
+
+/* Mode sombre automatique si le téléphone est réglé en sombre */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #12161f;
+    --carte: #1b2130;
+    --texte: #e9ecf2;
+    --texte-doux: #a3acbd;
+    --bordure: #2c3446;
+    --principal: #8fb4e8;
+    --principal-clair: #22304a;
+    --ombre: none;
+  }
+}
+
+* { box-sizing: border-box; }
+/* Un élément marqué "hidden" doit toujours rester caché, même si une autre règle lui donne un "display". */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fond);
+  color: var(--texte);
+  line-height: 1.45;
+}
+
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+/* ---------- En-tête ---------- */
+.entete {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  background: var(--fond);
+  border-bottom: 1px solid var(--bordure);
+}
+.marque { display: flex; align-items: center; gap: 10px; }
+.marque h1 { font-size: 1.05rem; margin: 0; letter-spacing: -.01em; }
+.moment-actuel { margin: 0; font-size: .85rem; color: var(--texte-doux); }
+
+.bouton-icone {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--bordure); background: var(--carte); font-size: 1.2rem;
+}
+
+/* ---------- Contenu ---------- */
+.contenu { max-width: 640px; margin: 0 auto; padding: 18px 16px 40px; }
+
+.titre-section {
+  font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--texte-doux); margin: 22px 0 10px;
+}
+.ligne-titre { display: flex; align-items: center; justify-content: space-between; }
+.info { color: var(--texte-doux); font-size: .88rem; margin: 4px 0 10px; }
+.info:empty { display: none; }
+
+/* ---------- La grande carte "Maintenant" ---------- */
+.carte-maintenant {
+  background: var(--carte);
+  border-radius: calc(var(--rayon) + 4px);
+  box-shadow: var(--ombre);
+  border: 1px solid var(--bordure);
+  border-left: 6px solid var(--couleur-moment, var(--principal));
+  padding: 20px;
+}
+.carte-maintenant h3 { font-size: 1.45rem; margin: 6px 0 10px; line-height: 1.25; word-break: break-word; }
+.carte-maintenant .raisons { margin-top: 10px; }
+.boutons-maintenant { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.boutons-maintenant button { flex: 1 1 140px; min-height: 52px; border-radius: 12px; font-weight: 600; }
+
+.carte-vide {
+  text-align: center; padding: 28px 16px; border-radius: var(--rayon);
+  border: 2px dashed var(--bordure); color: var(--texte-doux);
+}
+.carte-vide strong { display: block; color: var(--texte); font-size: 1.1rem; margin-bottom: 4px; }
+
+/* ---------- Boutons ---------- */
+.bouton-principal { background: var(--principal); color: var(--carte); border: none; padding: 12px 20px; border-radius: 12px; font-weight: 600; }
+.bouton-secondaire { background: var(--principal-clair); color: var(--principal); border: none; padding: 12px 18px; border-radius: 12px; font-weight: 600; }
+.bouton-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 12px 16px; border-radius: 12px; }
+.bouton-fait { background: var(--succes); color: #fff; border: none; }
+
+.bouton-ajouter {
+  width: 100%; margin-top: 16px; min-height: 56px;
+  border: 2px dashed var(--principal); border-radius: var(--rayon);
+  background: var(--principal-clair); color: var(--principal);
+  font-size: 1.05rem; font-weight: 700;
+}
+
+/* ---------- La liste des tâches ---------- */
+.liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.tache {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--carte); border: 1px solid var(--bordure);
+  border-left: 4px solid var(--couleur-moment, var(--bordure));
+  border-radius: 12px; padding: 12px;
+}
+.case {
+  flex: none; width: 30px; height: 30px; margin-top: 1px; border-radius: 50%;
+  border: 2px solid var(--texte-doux); background: transparent; font-size: .9rem;
+}
+.case:hover { border-color: var(--succes); color: var(--succes); }
+.tache-corps { flex: 1; min-width: 0; }
+.tache-titre { font-weight: 600; word-break: break-word; }
+.tache.faite .tache-titre { text-decoration: line-through; color: var(--texte-doux); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: .8rem; color: var(--texte-doux); align-items: center; }
+.bouton-texte { background: none; border: none; color: var(--texte-doux); padding: 4px 6px; border-radius: 8px; }
+.bouton-texte:hover { background: var(--principal-clair); }
+
+.pastille {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 999px; font-size: .78rem; font-weight: 600;
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+  color: var(--c);
+}
+.score { cursor: pointer; border: 1px solid var(--bordure); background: none; border-radius: 999px; padding: 1px 8px; font-size: .75rem; color: var(--texte-doux); }
+.raisons { font-size: .78rem; color: var(--texte-doux); }
+.raisons[hidden] { display: none; }
+
+/* ---------- Zones repliables ---------- */
+.zone-repliable { margin-top: 22px; }
+.zone-repliable summary { cursor: pointer; font-weight: 600; color: var(--texte-doux); padding: 8px 0; }
+.zone-repliable .liste { margin-top: 8px; }
+.compteur { background: var(--principal-clair); color: var(--principal); border-radius: 999px; padding: 0 8px; font-size: .8rem; }
+
+.interrupteur { display: flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--texte-doux); }
+.interrupteur input { width: 18px; height: 18px; }
+
+/* ---------- Pied de page ---------- */
+.pied { margin-top: 40px; text-align: center; color: var(--texte-doux); font-size: .8rem; }
+.bouton-don { display: inline-block; margin-bottom: 8px; padding: 10px 18px; border-radius: 999px; background: #fff4d6; color: #7a5300; text-decoration: none; font-weight: 600; }
+
+/* ---------- Fenêtres (dialogues) ---------- */
+.dialogue {
+  width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px);
+  border: none; border-radius: 20px; padding: 22px;
+  background: var(--carte); color: var(--texte);
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+.dialogue::backdrop { background: rgba(18, 22, 31, .45); }
+.dialogue h2 { margin: 0 0 14px; font-size: 1.25rem; }
+.dialogue h3 { margin: 22px 0 6px; font-size: 1rem; }
+
+.champ { display: grid; gap: 6px; margin: 0 0 14px; border: none; padding: 0; }
+.champ > span, .champ > legend { font-size: .85rem; font-weight: 600; color: var(--texte-doux); padding: 0; margin-bottom: 6px; }
+.champ input, .champ select, .moment-edition input {
+  width: 100%; min-height: 46px; padding: 10px 12px;
+  border: 1px solid var(--bordure); border-radius: 10px; background: var(--fond);
+}
+.deux-colonnes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Les étiquettes à cocher : la vraie case est cachée, on stylise le libellé */
+.choix-etiquettes { display: flex; flex-wrap: wrap; gap: 8px; }
+.choix-etiquettes label {
+  border: 2px solid var(--bordure); border-radius: 999px; padding: 8px 14px;
+  cursor: pointer; font-weight: 600; user-select: none;
+}
+.choix-etiquettes input { position: absolute; opacity: 0; pointer-events: none; }
+.choix-etiquettes label:has(input:checked) {
+  border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--c);
+}
+.choix-etiquettes label:has(input:focus-visible) { outline: 2px solid var(--principal); outline-offset: 2px; }
+
+.raccourcis { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 14px; }
+.raccourcis button, .bouton-fichier {
+  border: 1px solid var(--bordure); background: var(--fond); border-radius: 999px;
+  padding: 7px 13px; font-size: .85rem; cursor: pointer;
+}
+.actions-dialogue { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; align-items: center; }
+.actions-dialogue button { padding: 12px 14px; }
+.espace { flex: 1; }
+
+/* Éditeur de moments de vie */
+.moment-edition { border: 1px solid var(--bordure); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+.moment-entete { display: grid; grid-template-columns: 64px 1fr auto; gap: 8px; align-items: center; }
+.plage { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+.moment-edition .plage input[type="time"] { width: auto; min-height: 38px; padding: 6px 8px; }
+.jour { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--bordure); background: var(--fond); font-size: .8rem; font-weight: 600; padding: 0; }
+.jour.actif { background: var(--principal); color: var(--carte); border-color: var(--principal); }
+
+/* ---------- Matrice, conseils, étapes ---------- */
+.conseil {
+  margin: 0 0 12px; padding: 8px 12px; border-radius: 10px; font-weight: 600; font-size: .9rem;
+  background: color-mix(in srgb, var(--c) 10%, transparent); color: var(--c);
+}
+.etapes { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 6px; }
+.etapes li { display: flex; align-items: center; gap: 10px; }
+.etapes li.faite span { text-decoration: line-through; color: var(--texte-doux); }
+.case-petite { width: 26px; height: 26px; margin: 0; }
+.aide, .champ > .aide { font-size: .8rem; color: var(--texte-doux); font-weight: 400; margin: 4px 0 0; }
+.aide-forte, .champ > .aide-forte { color: #b35c00; font-weight: 600; }
+.champ textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--bordure); border-radius: 10px;
+  background: var(--fond); font: inherit; color: inherit; resize: vertical;
+}
+
+/* ---------- Réglages : rappels push ---------- */
+.bloc-push { margin-top: 14px; padding: 14px; border: 1px solid var(--bordure); border-radius: 12px; }
+.bloc-push h4 { margin: 0 0 6px; }
+.bloc-push .interrupteur { margin: 8px 0 12px; align-items: flex-start; }
+.bloc-push a { color: var(--principal); }
+
+/* ---------- Liens du pied de page ---------- */
+.liens-pied { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin-top: 10px; }
+.liens-pied a { color: var(--texte-doux); }
+
+/* ---------- Pages de texte (aide, confidentialité, mentions) ---------- */
+.page-texte { max-width: 680px; margin: 0 auto; padding: 24px 18px 60px; }
+.page-texte h1 { font-size: 1.6rem; line-height: 1.2; }
+.page-texte h2 { font-size: 1.15rem; margin-top: 28px; }
+.page-texte a { color: var(--principal); }
+.page-texte .retour { display: inline-block; margin-bottom: 12px; }
+.page-texte table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+.page-texte td, .page-texte th { border-top: 1px solid var(--bordure); padding: 8px 6px; text-align: left; vertical-align: top; }
+
+/* ---------- Bandeau de message ---------- */
+.bandeau {
+  position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  background: var(--texte); color: var(--fond);
+  padding: 12px 18px; border-radius: 12px; z-index: 20;
+  display: flex; gap: 12px; align-items: center; max-width: calc(100vw - 32px);
+}
+.bandeau button { background: none; border: none; color: inherit; text-decoration: underline; font-weight: 700; }
+
+@media (max-width: 420px) {
+  .deux-colonnes { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tache, .carte-maintenant { transition: transform .15s ease; }
+}
