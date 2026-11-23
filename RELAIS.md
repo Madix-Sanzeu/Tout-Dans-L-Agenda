@@ -42,5 +42,9 @@ _Mis à jour le 23/11/2026 : phase 2 quasiment terminée + sauvegarde des donné
 - Imposer le découpage en étapes au-delà d'une certaine durée ?
 
 ## Phases suivantes
+- **Phase pré-3 — sauvegarde automatique chiffrée (facultative, avec consentement)** : à l'ouverture de l'appli / après un changement, les tâches sont chiffrées SUR le téléphone avec un code de récupération que seule la personne possède, puis envoyées à Supabase (bloc illisible pour nous). Restauration sur un nouveau téléphone avec le code. Android et iPhone.
+  - Écartés : e-mail (serveur qui lit les tâches, adresse à stocker, spam, coût) ; Google Drive (validation Google, reconnexions, exclut les non-Google).
+  - Risque : code perdu = données perdues → proposer de partager le code dès sa création ; garder la sauvegarde fichier en parallèle.
+  - À faire : plan en 5 points ; mettre à jour confidentialite.html ; en parler avec Sandra (les tâches ne sont plus « uniquement sur l'appareil », même chiffrées).
 - **Phase 3 — comptes (facultatif)** : synchronisation entre appareils, en ne remplaçant que `js/stockage.js` ; RGPD renforcé.
 - **Phase 4 — stores** : Android via PWABuilder ou Bubblewrap (environ 25 $ une seule fois) ; iPhone via Capacitor (Mac + environ 99 $ par an).
