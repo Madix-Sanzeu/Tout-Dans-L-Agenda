@@ -13,7 +13,7 @@
    garderont l'ancienne copie.
    ===================================================================== */
 
-const VERSION = 'tda-v9';
+const VERSION = 'tda-v10';
 const FICHIERS = [
   './', 'index.html', 'aide.html', 'confidentialite.html', 'mentions-legales.html',
   'css/style.css', 'manifest.json', 'icone.svg', 'icone-192.png', 'icone-512.png',

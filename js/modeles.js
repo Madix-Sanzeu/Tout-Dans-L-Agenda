@@ -51,6 +51,11 @@ TDA.modeles = (function () {
     return d;
   }
 
+  // 1 → "(1 an)", 37 → "(37 ans)"
+  function texteAge(age) {
+    return '(' + age + (age > 1 ? ' ans)' : ' an)');
+  }
+
   // "08:00" → "8h", "13:30" → "13h30"
   function heureCourte(h) {
     const [hh, mm] = h.split(':');
@@ -114,7 +119,9 @@ TDA.modeles = (function () {
       description: 'Un rappel le jour J chaque année, et si vous voulez, un autre quelques jours avant pour penser au cadeau.',
       champs: [
         { id: 'nom', type: 'texte', label: 'L\'anniversaire de qui ?', placeholder: 'Ex. : Léa', requis: true },
-        { id: 'date', type: 'date', label: 'Date de l\'anniversaire', requis: true, aide: 'L\'année n\'a pas d\'importance.' },
+        { id: 'date', type: 'date', label: 'Date de naissance', requis: true, aide: 'Année inconnue ? Mettez n\'importe laquelle et répondez « Non » juste en dessous.' },
+        { id: 'age', type: 'choix', label: 'Afficher l\'âge dans le rappel ?', defaut: 'oui', options: [
+          ['oui', 'Oui, l\'année est la bonne'], ['non', 'Non, année inconnue']] },
         { id: 'heure', type: 'heure', label: 'Heure du rappel', defaut: () => A().HEURE_ANNIVERSAIRE },
         { id: 'cadeau', type: 'choix', label: '🎁 Me prévenir avant, pour le cadeau ?', defaut: '7', options: [
           ['0', 'Non merci'], ['3', '3 jours avant'], ['7', '1 semaine avant'], ['14', '2 semaines avant'], ['autre', 'Autre…']] },
@@ -130,8 +137,18 @@ TDA.modeles = (function () {
         const cetteAnnee = `${annee}-${mois}-${jour}`;
         const regle = { unite: 'an', intervalle: 1, jours: [], ancre: dateHeure(cetteAnnee, r.heure).toISOString(), fin: null };
         const jourJ = R().premiere(regle, new Date(), true);   // aujourd'hui = on le garde
+
+        // L'âge (facultatif) : on garde l'année de naissance dans la tâche,
+        // et l'appli recalcule l'âge du titre chaque année (voir app.js, majAge).
+        const anneeNaissance = r.age === 'oui' ? Number(r.date.slice(0, 4)) : null;
+        if (anneeNaissance && anneeNaissance > new Date().getFullYear()) {
+          throw new Error('L\'année de naissance est dans le futur : vérifiez la date.');
+        }
+        const avecAge = (titre, dateAnniv) => anneeNaissance ? titre + ' ' + texteAge(dateAnniv.getFullYear() - anneeNaissance) : titre;
+
         const taches = [{
-          titre: `Souhaiter l'anniversaire de ${r.nom}`, etiquettes: ['important', 'agreable'], moment: r.moment,
+          titre: avecAge(`Souhaiter l'anniversaire de ${r.nom}`, jourJ), anneeNaissance,
+          etiquettes: ['important', 'agreable'], moment: r.moment,
           duree: 5, rappel: jourJ.toISOString(), echeance: null, recurrence: regle, etapes: []
         }];
         const avance = r.cadeau === 'autre' ? r.cadeauJours : Number(r.cadeau);
@@ -139,7 +156,8 @@ TDA.modeles = (function () {
           const regleCadeau = { ...regle, ancre: decaler(new Date(regle.ancre), -avance).toISOString() };
           const rappelCadeau = R().premiere(regleCadeau);
           taches.push({
-            titre: `Trouver un cadeau pour ${r.nom}`, etiquettes: ['important'], moment: r.moment, duree: 30,
+            titre: avecAge(`Trouver un cadeau pour ${r.nom}`, decaler(rappelCadeau, avance)), anneeNaissance,
+            etiquettes: ['important'], moment: r.moment, duree: 30,
             rappel: rappelCadeau.toISOString(),
             echeance: decaler(rappelCadeau, avance).toISOString(),   // le jour de l'anniversaire
             recurrence: regleCadeau,
@@ -287,6 +305,7 @@ TDA.modeles = (function () {
   return {
     liste: MODELES,
     trouver: id => MODELES.find(m => m.id === id),
-    aujourdhui
+    aujourdhui,
+    texteAge
   };
 })();

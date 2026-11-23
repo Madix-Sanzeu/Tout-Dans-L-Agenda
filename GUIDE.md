@@ -168,7 +168,7 @@ Si l'appli est ouverte, la même tâche peut déclencher les deux notifications.
 
 | Modèle | Questions | Ce qui est créé |
 |---|---|---|
-| 🎂 Anniversaire | De qui, date, heure, rappel X jours avant pour le cadeau | 1 tâche par an, plus « Trouver un cadeau » X jours avant (avec ses étapes) |
+| 🎂 Anniversaire | De qui, date de naissance, afficher l'âge (si l'année est connue), heure, rappel X jours avant pour le cadeau | 1 tâche par an, plus « Trouver un cadeau » X jours avant (avec ses étapes). Si l'année est connue, l'âge s'affiche dans le titre, par exemple « (37 ans) », et se met à jour chaque année (`majAge()` dans `app.js`, grâce au champ `anneeNaissance`) |
 | 💊 Médicament | Nom, combien de fois par jour et à quelles heures, tous les jours, certains jours ou tous les N jours, à partir de quand, pendant combien de temps (pas d'arrêt / N jours / jusqu'au…) | 1 tâche par prise |
 | 🧾 Facture ou paiement | Quoi, prochaine échéance, mois / 3 mois / an, prévenir X jours avant | 1 tâche, avec l'échéance comme date limite |
 | 📄 Renouvellement | Quoi, date limite, tous les N mois ou ans, prévenir X jours avant | idem |

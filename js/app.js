@@ -304,7 +304,7 @@ TDA.app = (function () {
     copie.recurrence = null;
     copie.serieId = t.id;                                   // lien vers la tâche d'origine
     copie.faiteLe = maintenant.toISOString();
-    copie.avant = { rappel: t.rappel, echeance: t.echeance, rappelEnvoye: t.rappelEnvoye,
+    copie.avant = { titre: t.titre, rappel: t.rappel, echeance: t.echeance, rappelEnvoye: t.rappelEnvoye,
                     reporteJusqua: t.reporteJusqua, etapes: structuredClone(t.etapes || []) };
     etat.taches.push(copie);
 
@@ -325,6 +325,19 @@ TDA.app = (function () {
     }
     t.rappel = nouvelleDate.toISOString();
     t.rappelEnvoye = dejaSonne;
+    majAge(t);
+  }
+
+  // Anniversaire avec année de naissance : le titre se termine par l'âge,
+  // ex. « Souhaiter l'anniversaire de Léa (37 ans) ». À chaque nouvelle
+  // année, on remplace l'ancien âge par le nouveau.
+  // L'âge se calcule à la date de l'anniversaire : l'échéance pour la tâche
+  // « cadeau » (prévenue quelques jours avant), sinon le rappel.
+  function majAge(t) {
+    if (!t.anneeNaissance) return;
+    const jourJ = new Date(t.echeance || t.rappel);
+    const age = jourJ.getFullYear() - t.anneeNaissance;
+    t.titre = t.titre.replace(/ \(\d+ ans?\)$/, '') + ' ' + TDA.modeles.texteAge(age);
   }
 
   function defaire(id) {
