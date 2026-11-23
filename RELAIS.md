@@ -33,6 +33,7 @@ _Mis à jour le 23/11/2026 : phase 2 quasiment terminée + sauvegarde des donné
 3. Plus tard : choisir la plateforme de don.
 
 ## À valider avec Learnhavior (3 psychologues, dont Sandra)
+_Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artifact/NfwuV8XGJ5onk4R1PxPnoB_
 - Le rappel de sauvegarde : fréquence (14 jours) et formulation, pour ne pas culpabiliser.
 - Phase 3 — récupération d'un compte chiffré (mot de passe ET e-mail perdus) : quels moyens proposer, sachant que ce public perd facilement les codes ? Code de récupération à l'inscription, clé dans le fichier de sauvegarde, autre appareil connecté, contact de confiance (proche, aidant), ou plusieurs cumulés.
 - Phase 3 — comment expliquer simplement que, sans aucun de ces moyens, les tâches sont perdues (prix d'une confidentialité réelle) ?
