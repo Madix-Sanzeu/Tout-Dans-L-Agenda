@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 24/11/2026 : appli Android (APK, Capacitor, rappels natifs) en cours de validation._
+_Mis à jour le 24/11/2026 (soir) : nouveau logo (τ dans un galet pêche) intégré, `tda-v15`._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -32,6 +32,7 @@ _Mis à jour le 24/11/2026 : appli Android (APK, Capacitor, rappels natifs) en c
 - **Diagnostic (24/11, Xiaomi + Chrome)** : le site est « géré par l'application » TDA (permission déléguée à l'appli installée). Android autorise les notifications pour TDA et pour Chrome, mais à chaque ouverture la page voit la permission « non accordée ». Chrome annule alors l'abonnement push, Google répond 410 au serveur, l'appareil est effacé. Défaut Chrome / appli web installée, pas de l'appli ni du serveur. Test de notification : OK une fois (12:54–12:55), puis adresse annulée à 12:57.
 - **Garde-fou (`tda-v13`)** : bandeau rouge « ⚠️ Vos rappels sont coupés » sur l'écran principal dès que la permission a sauté, bouton « Réactiver les rappels » (permission + réabonnement en un toucher). Le bouton « Activer les notifications » de ⚙️ fait la même chose. Testé dans Chrome (3 cas : OK, coupé puis réactivé, coupé puis refusé).
 - **Appli Android (24/11, `tda-v14`)** : Capacitor + notifications locales programmées par Android (`js/natif.js`), sans serveur ni Internet. Sauvegarde par le menu Partager d'Android. APK fabriqué par GitHub Actions (`.github/workflows/android.yml`) et publié à https://github.com/Madix-Sanzeu/Tout-Dans-L-Agenda/releases/download/apk/TDA.apk. Identifiant `io.github.madixsanzeu.tda`, nom sous l'icône « TDA ». Nom de l'appli centralisé dans `TDA.config.NOM` (changement de nom prévu, voir la recette dans GUIDE.md). Testé dans Chrome en simulant l'appli Android (rappels programmés, garde-fou, test, réglage minute près, sauvegarde) ; **testé sur le Xiaomi le 24/11 : notification de test reçue appli fermée, et l'APK a passé les analyses de sécurité du téléphone (Play Protect)**.
+- **Logo (24/11 soir, `tda-v15`)** : la lettre grecque τ (tau, « T » de Tâches) dans un galet pêche, dans l'esprit de Psy'Havior (ψ) et Learn'Havior (λ), d'après le modèle choisi par Max (redessiné en SVG). Source : `logo/logo-tda.svg` (+ `logo/logo-horizontal.svg` avec le nom). Remplace `icone.svg`, `icone-192.png`, `icone-512.png` et l'icône Android (`assets/icon-only.png`, `icon-foreground.png`, `icon-background.png` ; fond blanc). Les couleurs de l'interface (bleu `#1f3a5f`) n'ont pas changé. Recette « Changer le logo » dans GUIDE.md.
 - Tests dans un navigateur : appli, réglages et pages OK, aucune erreur ; fonctions serveur vérifiées pour la syntaxe uniquement (pas d'environnement Deno ici).
 
 ## Reste à faire pour finir la phase 2
@@ -43,6 +44,7 @@ _Mis à jour le 24/11/2026 : appli Android (APK, Capacitor, rappels natifs) en c
 3. Plus tard : choisir la plateforme de don.
 
 ## Appli Android : reste à faire
+- Vérifier la nouvelle icône sur le Xiaomi après réinstallation de l'APK (rognage rond / arrondi correct).
 - APK installé sur le Xiaomi ✅ ; reste à vérifier les rappels réels appli fermée sur 2 à 3 jours (tâche simple, médicament quotidien).
 - Clé de signature : gardée dans le cache GitHub, consulté chaque lundi par `garder-cle.yml` pour qu'il ne soit pas vidé (pas de réinstallation). Avant de distribuer à des testeurs : clé permanente dans le secret `ANDROID_KEYSTORE_BASE64` (à faire depuis l'ordinateur ; `android.yml` l'utilise automatiquement ; une dernière réinstallation sera nécessaire).
 - Mises à jour : pas de bandeau « nouvelle version » (décision du 24/11) ; pendant les tests, il retélécharge l'APK lui-même et prévient les testeurs ; mise à jour automatique une fois sur le Play Store.
@@ -55,6 +57,7 @@ Le push web dépend du bon accord entre Chrome et le système, et ce n'est pas l
 
 ## À valider avec Learnhavior (3 psychologues, dont Sandra)
 _Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artifact/NfwuV8XGJ5onk4R1PxPnoB_
+- Le logo (τ dans un galet pêche, dans le style Psy'Havior / Learn'Havior) : leur accord pour reprendre ce code visuel ; faut-il aussi passer les couleurs de l'appli (bleu) aux tons pêche ?
 - Le rappel de sauvegarde : fréquence (14 jours) et formulation, pour ne pas culpabiliser.
 - Phase 3 — récupération d'un compte chiffré (mot de passe ET e-mail perdus) : quels moyens proposer, sachant que ce public perd facilement les codes ? Code de récupération à l'inscription, clé dans le fichier de sauvegarde, autre appareil connecté, contact de confiance (proche, aidant), ou plusieurs cumulés.
 - Phase 3 — comment expliquer simplement que, sans aucun de ces moyens, les tâches sont perdues (prix d'une confidentialité réelle) ?

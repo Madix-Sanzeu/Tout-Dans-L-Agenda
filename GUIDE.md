@@ -58,7 +58,8 @@ TDA - Tout Dans lAgenda/
 ├── capacitor.config.json, package.json, assets/, android-ressources/   Appli Android (voir DEPLOIEMENT.md)
 ├── .github/workflows/android.yml   GitHub fabrique l'APK tout seul à chaque modification
 ├── manifest.json     Carte d'identité de l'appli (nom, icône, couleurs)
-├── icone.svg / .png  L'icône
+├── icone.svg / .png  L'icône (le τ dans son galet pêche)
+├── logo/             Le logo en grand (seul, et avec le nom « Tout Dans l'Agenda »)
 ├── GUIDE.md          Ce guide
 ├── RELAIS.md         Où on en est, et la suite
 └── CLAUDE.md         Règles du projet (pour travailler avec Claude)
@@ -266,6 +267,7 @@ Les dates sont en heure universelle (le `Z` final) ; l'affichage les convertit e
 | Changer la durée de « Pas maintenant » | `js/config.js` | `REPORT_MINUTES` |
 | Afficher le bouton de don | `js/config.js` | Mettre l'adresse dans `LIEN_DON` |
 | Changer une couleur générale | `css/style.css` | Variables au début du fichier (`--principal`, `--fond`…) |
+| Changer le logo / l'icône | `logo/logo-tda.svg` (le dessin) | 1) Modifier le dessin (fichier texte : couleurs notées dans le commentaire du haut) ; 2) refaire les images : `icone.svg`, `icone-192.png`, `icone-512.png` (marge plus large : le téléphone peut rogner en rond) et, pour Android, `assets/icon-only.png`, `assets/icon-foreground.png` (logo petit au centre, fond transparent), `assets/icon-background.png` (blanc) ; 3) augmenter `VERSION` dans `sw.js` |
 | **Changer le nom de l'appli** | plusieurs fichiers | 1) `js/config.js` → `NOM` ; 2) `manifest.json` → `name` et `short_name` ; 3) `capacitor.config.json` → `appName` (nom sous l'icône Android) ; 4) les titres des pages HTML (chercher « Tout Dans l'Agenda » avec `Ctrl + Maj + F` dans VS Code) ; 5) `sw.js` (titre par défaut des notifications). Ne **jamais** changer `appId` dans `capacitor.config.json` |
 | Changer un texte affiché | `index.html` ou `js/app.js` | Chercher le texte (`Ctrl + F`) et le remplacer |
 | Publier une nouvelle version en ligne | `sw.js` | Augmenter `VERSION` (`tda-v1` → `tda-v2`), sinon les téléphones gardent l'ancienne. Le numéro s'affiche en bas de l'appli (« Version tda-v… ») : c'est le moyen de vérifier qu'un téléphone est à jour |

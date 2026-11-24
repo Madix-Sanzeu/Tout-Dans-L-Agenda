@@ -92,9 +92,10 @@ jobs:
           # Petite icône blanche des notifications
           mkdir -p android/app/src/main/res/drawable
           cp android-ressources/ic_stat_tda.xml android/app/src/main/res/drawable/
-          # Icône de l'appli à partir de assets/icon-only.png
+          # Icône de l'appli : assets/icon-only.png (anciens Android) et
+          # assets/icon-foreground.png + icon-background.png (icône adaptative)
           npx @capacitor/assets generate --android \
-            --iconBackgroundColor '#1f3a5f' --iconBackgroundColorDark '#1f3a5f' \
+            --iconBackgroundColor '#ffffff' --iconBackgroundColorDark '#ffffff' \
             --splashBackgroundColor '#f5f3ee' --splashBackgroundColorDark '#12161f' \
             || echo "Icônes : on garde celles par défaut"
           # Numéro de version = numéro de la fabrication (indispensable pour les mises à jour)
