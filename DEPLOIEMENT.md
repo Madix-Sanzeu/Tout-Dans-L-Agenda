@@ -41,7 +41,10 @@ Le code est sur <https://github.com/Madix-Sanzeu/Tout-Dans-L-Agenda>. L'appli es
 - `assets/icon-only.png` : l'icône de l'appli (1024 × 1024).
 - `android-ressources/ic_stat_tda.xml` : la petite icône blanche des notifications.
 
-**Clé de signature.** Android n'accepte une mise à jour que si elle est signée avec la même clé que la version installée. La clé est créée par GitHub à la première fabrication et gardée dans son cache privé (`tda-cle-signature-v1`). ⚠️ GitHub vide un cache inutilisé pendant 7 jours. Si la clé change, il faut désinstaller l'ancienne appli avant d'installer la nouvelle, et donc **sauvegarder ses tâches d'abord**. Avant de distribuer l'appli largement, il faudra passer à une clé permanente rangée dans les secrets GitHub (voir RELAIS.md).
+**Clé de signature.** Android n'accepte une mise à jour que si elle est signée avec la même clé que la version installée.
+- **Aujourd'hui** : la clé a été créée par GitHub à la première fabrication et elle est gardée dans son cache privé (`tda-cle-signature-v1`). GitHub vide un cache inutilisé pendant 7 jours. Le travail `.github/workflows/garder-cle.yml` le consulte donc chaque lundi pour le garder. S'il échoue, c'est que la clé a disparu : la version suivante demandera de désinstaller l'appli, donc de **sauvegarder ses tâches d'abord**.
+- **Clé permanente (à faire avant de distribuer à des testeurs)** : enregistrer une clé dans le secret GitHub `ANDROID_KEYSTORE_BASE64` (Settings → Secrets and variables → Actions → New repository secret). Le contenu attendu est le fichier de clé (keystore, alias `androiddebugkey`, mots de passe `android`) converti en base64. `android.yml` l'utilise automatiquement dès qu'il existe. ⚠️ Le passage à cette clé oblige une dernière fois à désinstaller puis réinstaller l'appli.
+- **Play Store (plus tard)** : Google gère la clé de signature définitive (« Play App Signing »).
 
 **Rappels à la minute près.** L'APK déclare la permission `USE_EXACT_ALARM`, accordée d'office sur Android 13 et plus. ⚠️ Pour une future publication sur le Play Store, Google réserve cette permission aux applis d'agenda ou de réveil : il faudra peut-être passer à `SCHEDULE_EXACT_ALARM`, que la personne accorde elle-même. Le bouton « Autoriser les rappels à la minute près » de ⚙️ est déjà prévu pour ça.
 

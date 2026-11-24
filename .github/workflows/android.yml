@@ -54,10 +54,18 @@ jobs:
           path: ~/.android/debug.keystore
           key: tda-cle-signature-v1
 
+      # Clé PERMANENTE : si le secret GitHub ANDROID_KEYSTORE_BASE64 existe
+      # (Settings → Secrets and variables → Actions), c'est elle qui signe.
+      # Sinon, on utilise la clé gardée dans le cache (ou on en crée une).
       - name: Créer la clé de signature (première fois seulement)
+        env:
+          CLE_PERMANENTE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           mkdir -p ~/.android
-          if [ ! -f ~/.android/debug.keystore ]; then
+          if [ -n "$CLE_PERMANENTE" ]; then
+            echo "$CLE_PERMANENTE" | base64 -d > ~/.android/debug.keystore
+            echo "Signature avec la clé permanente (secret GitHub)"
+          elif [ ! -f ~/.android/debug.keystore ]; then
             keytool -genkeypair -v -keystore ~/.android/debug.keystore -storepass android \
               -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
               -dname "CN=TDA,O=TDA,C=FR"

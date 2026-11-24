@@ -44,7 +44,8 @@ _Mis à jour le 24/11/2026 : appli Android (APK, Capacitor, rappels natifs) en c
 
 ## Appli Android : reste à faire
 - APK installé sur le Xiaomi ✅ ; reste à vérifier les rappels réels appli fermée sur 2 à 3 jours (tâche simple, médicament quotidien).
-- Avant de distribuer à des testeurs : clé de signature permanente dans les secrets GitHub (aujourd'hui gardée dans le cache GitHub, qui est vidé après 7 jours sans fabrication).
+- Clé de signature : gardée dans le cache GitHub, consulté chaque lundi par `garder-cle.yml` pour qu'il ne soit pas vidé (pas de réinstallation). Avant de distribuer à des testeurs : clé permanente dans le secret `ANDROID_KEYSTORE_BASE64` (à faire depuis l'ordinateur ; `android.yml` l'utilise automatiquement ; une dernière réinstallation sera nécessaire).
+- Mises à jour : pas de bandeau « nouvelle version » (décision du 24/11) ; pendant les tests, il retélécharge l'APK lui-même et prévient les testeurs ; mise à jour automatique une fois sur le Play Store.
 - iPhone : nécessite un Mac (Xcode) ; en attendant, la version web avec le push reste l'option iPhone.
 
 ## Décision à prendre : rappels fiables sur TOUS les téléphones (en cours : appli Android)

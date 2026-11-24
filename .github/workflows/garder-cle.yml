@@ -1,0 +1,41 @@
+# =====================================================================
+# Garder la clé de signature de l'appli Android
+# ---------------------------------------------------------------------
+# La clé qui signe l'APK est rangée dans le cache de GitHub (voir
+# android.yml). GitHub efface un cache qui n'a pas servi depuis 7 jours :
+# la mise à jour suivante serait alors refusée par Android (il faudrait
+# désinstaller l'appli). Ce petit travail « consulte » la clé chaque
+# lundi, ce qui suffit à la garder.
+#
+# Inutile une fois la clé permanente enregistrée dans les secrets GitHub
+# (ANDROID_KEYSTORE_BASE64, voir DEPLOIEMENT.md).
+#
+# ⚠️ GitHub suspend les travaux planifiés d'un dépôt public sans aucune
+# modification pendant 60 jours : n'importe quel envoi les réactive.
+# =====================================================================
+
+name: Garder la clé de signature
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'   # chaque lundi à 4 h 17 (heure UTC)
+  workflow_dispatch:       # ou à la main : Actions → « Garder la clé de signature » → Run workflow
+
+jobs:
+  garder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consulter la clé (la garde 7 jours de plus)
+        id: cle
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: tda-cle-signature-v1
+
+      - name: Vérifier qu'elle est toujours là
+        run: |
+          if [ "${{ steps.cle.outputs.cache-hit }}" != "true" ]; then
+            echo "::error::La clé de signature a disparu du cache : la prochaine version demandera de désinstaller l'appli (sauvegarder ses tâches avant)."
+            exit 1
+          fi
+          echo "Clé de signature présente ✅"
