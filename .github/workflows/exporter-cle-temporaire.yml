@@ -1,0 +1,50 @@
+# TEMPORAIRE — sera supprimé juste après usage.
+# Sort la clé de signature du cache GitHub en la CHIFFRANT avec un cadenas
+# public : seule la personne qui a la clé privée du cadenas peut la lire.
+# Le fichier déposé (artefact) est donc illisible pour tout le monde.
+name: Exporter la clé (temporaire)
+on:
+  workflow_dispatch:
+jobs:
+  exporter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrouver la clé de signature
+        id: cle
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: tda-cle-signature-v1
+      - name: Chiffrer la clé
+        run: |
+          test "${{ steps.cle.outputs.cache-hit }}" = "true" || { echo "::error::clé absente du cache"; exit 1; }
+          cat > cadenas.pem <<'CADENAS'
+          -----BEGIN PUBLIC KEY-----
+          MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAv9hNt53losvYKudvGJ2f
+          FZc2v5pXU6GOirD1poX1Pco8dAyOFJGiU6jjNCK11vLHPgOM8xnnIM6gNPD5wNBI
+          9vDxPSzoFKJBKk1Wldg/s44Oa6xTv8eMu7qdBfnIebfIRjbVOIH2QbI/2/7+c1Al
+          qAvQG5bCxTox88oZkG9+DNPSug2jXe/RK4rwSwGbQtaFeo4OuV/9HqcNtu/tIYog
+          xZKpZi4Nq5C6xBnbOqKcSETobNNHdjRPc75YhFrKUBFJgPhgkyes4PFFe9F7i5Z5
+          Mkvjd4cPwwXb/yw9zIv8R4OrqUB4HOzD+t4lHKxRkn/4wQHYASrxblgAoIybyXBj
+          64CaXsHHIrKhc29xaDENdqJNLsby/atHadGuHKz5D2BY0OmcZGsYhRnm4tivymOa
+          kGG9//lD4On+LvNN+KvBIsTnVxj91tpvzeQ0Hov2LiUZk61/LFnq6BzxHiwTpdv3
+          sqYUxNnlWnBkQ0MEJyplqjbVx4vNrMrmk/oR5BQPzXwsGDIU5I8p5SF2D80fh17b
+          58XDTFtI28dVl8NU9fTwnJmEd7h64MO2/B+cy9uc2Beq8CfRR8eAhbC21kZeR2UI
+          xA08RXPE+IfiuZ8swn01qMxUcmndPJXJFGK4EtnBt7pE0hCD6BXse/NLQ4wcqWeK
+          2cIchvbqrt1NGsfYE4RzYV0CAwEAAQ==
+          -----END PUBLIC KEY-----
+          CADENAS
+          sed -i 's/^ *//' cadenas.pem
+          openssl rand -out cle-aes.bin 32
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in ~/.android/debug.keystore -out cle.chiffree -pass file:cle-aes.bin
+          openssl pkeyutl -encrypt -pubin -inkey cadenas.pem -pkeyopt rsa_padding_mode:oaep -in cle-aes.bin -out cle-aes.chiffree
+          rm -f cle-aes.bin
+          echo "Empreinte de la clé exportée :"
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android | grep "SHA256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cle-chiffree
+          path: |
+            cle.chiffree
+            cle-aes.chiffree
+          retention-days: 1
