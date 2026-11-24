@@ -44,6 +44,7 @@ _Mis à jour le 24/11/2026 (soir) : nouveau logo (τ dans un galet pêche, image
 3. Plus tard : choisir la plateforme de don.
 
 ## Appli Android : reste à faire
+- **Signature (24/11, 21 h 30)** : deux APK successifs ont été refusés (« package en conflit ») alors que GitHub restaurait bien la clé : l'outil de fabrication ne signait sans doute pas avec elle. Désormais `android.yml` signe lui-même l'APK (`apksigner`) avec la clé du cache et affiche son empreinte dans le journal : **SHA-256 `73b12cf5…2e98ea`**. Si une fabrication affiche une autre empreinte, la clé a changé. Une dernière réinstallation a été nécessaire ; vérifier à la prochaine version que la mise à jour s'installe par-dessus.
 - Vérifier la nouvelle icône sur le Xiaomi après réinstallation de l'APK (rognage rond / arrondi correct).
 - APK installé sur le Xiaomi ✅ ; reste à vérifier les rappels réels appli fermée sur 2 à 3 jours (tâche simple, médicament quotidien).
 - Clé de signature : gardée dans le cache GitHub, consulté chaque lundi par `garder-cle.yml` pour qu'il ne soit pas vidé (pas de réinstallation). Avant de distribuer à des testeurs : clé permanente dans le secret `ANDROID_KEYSTORE_BASE64` (à faire depuis l'ordinateur ; `android.yml` l'utilise automatiquement ; une dernière réinstallation sera nécessaire).
