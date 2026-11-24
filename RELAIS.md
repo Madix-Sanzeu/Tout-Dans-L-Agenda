@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 24/11/2026 (22 h 30) : mise à jour de l'APK par-dessus validée ; interface aux couleurs du logo (`tda-v20`) ; clé de signature Android permanente en place ; nouveau logo intégré (`tda-v19`)._
+_Mis à jour le 24/11/2026 (22 h 30) : mise à jour de l'APK par-dessus validée ; piste iPhone sans Mac (TestFlight, Sideloadly en note) ; interface aux couleurs du logo (`tda-v20`) ; clé de signature Android permanente en place ; nouveau logo intégré (`tda-v19`)._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -11,6 +11,7 @@ _Mis à jour le 24/11/2026 (22 h 30) : mise à jour de l'APK par-dessus validée
 - Rappels appli fermée : notifications push via un projet Supabase dédié « TDA » (`qcnxjmmcrxrnjnrzcqrn`, Paris), dans l'organisation « madix's Org », séparé de « Max Kompte ».
 - Don : décision repoussée (`LIEN_DON` vide = bouton caché).
 - Avis des testeurs : lien vers les « issues » GitHub (`LIEN_AVIS`).
+- iPhone (24/11) : éviter la version web (amenée à disparaître) → appli native de test. Premier test iPhone **uniquement avec les psychologues de Learnhavior**.
 
 ## Fait ✅
 - Phase 1 et maquette pour Learnhavior (voir l'historique Git).
@@ -50,12 +51,19 @@ _Mis à jour le 24/11/2026 (22 h 30) : mise à jour de l'APK par-dessus validée
 - APK installé sur le Xiaomi ✅ ; reste à vérifier les rappels réels appli fermée sur 2 à 3 jours (tâche simple, médicament quotidien).
 - **Clé de signature permanente en place (24/11, 21 h 50)** : secret GitHub `ANDROID_KEYSTORE_BASE64` = la clé déjà utilisée (empreinte `73b12cf5…2e98ea`, aucune réinstallation). Vérifié : fabrication 1.12 signée avec la clé permanente. Le fichier `tda-android.keystore` est rangé en lieu sûr par le porteur du projet, hors GitHub et hors du dossier du projet ; les fichiers intermédiaires (base64, zip chiffré) sont supprimés. La garde hebdomadaire du cache (`garder-cle.yml`) est supprimée. Recréer le secret à partir du fichier : voir DEPLOIEMENT.md.
 - Mises à jour : pas de bandeau « nouvelle version » (décision du 24/11) ; pendant les tests, il retélécharge l'APK lui-même et prévient les testeurs ; mise à jour automatique une fois sur le Play Store.
-- iPhone : nécessite un Mac (Xcode) ; en attendant, la version web avec le push reste l'option iPhone.
 
-## Décision à prendre : rappels fiables sur TOUS les téléphones (en cours : appli Android)
+## Appli iPhone de test, sans Mac (piste du 24/11)
+- **Principe** : ajouter la plateforme iOS au projet Capacitor existant ; rappels par notifications locales (même code que `js/natif.js`), sans Chrome ni serveur. Fabrication sur une machine macOS de GitHub Actions (gratuite, dépôt public), dans un futur `.github/workflows/ios.yml`.
+- **Option retenue pour le test : TestFlight** (compte développeur Apple ≈ 99 €/an, réutilisé pour l'App Store en phase 4). GitHub envoie la version à Apple via une clé d'API App Store Connect ; les testeuses installent l'appli TestFlight puis TDA. Chaque version expire 90 jours après l'envoi.
+  - Test limité aux psychologues de Learnhavior. Piste : les ajouter comme utilisatrices de l'équipe App Store Connect (testeuses « internes », 100 max) → pas de validation Beta App Review d'Apple. Sinon, testeuses « externes » (e-mail ou lien), mais chaque version passe d'abord la validation d'Apple.
+  - Tout se règle depuis Windows (inscription Apple, création de l'appli, clés).
+- **Note — option gratuite : Sideloadly (Windows)** : GitHub fabrique l'appli non signée (.ipa), Sideloadly la signe avec un identifiant Apple gratuit et l'installe sur un iPhone branché en USB au PC. Notifications locales OK. Limites : réinstallation tous les 7 jours, 3 applis max par identifiant, iPhone physiquement branché → bon pour un essai perso, pas pour des testeurs.
+- **À faire** : plan en 5 points avant de commencer (iOS dans Capacitor, `ios.yml`, clés Apple, premier envoi TestFlight, test d'un rappel appli fermée sur iPhone).
+
+## Décision à prendre : rappels fiables sur TOUS les téléphones (en cours : appli Android, puis iPhone)
 Le push web dépend du bon accord entre Chrome et le système, et ce n'est pas le cas partout (Xiaomi). Pistes universelles :
 1. **« Ajouter à mon agenda »** : exporter les rappels importants (médicaments, anniversaires, factures) vers l'agenda du téléphone (fichier .ics, avec répétition et alarme). C'est le système qui sonne, sans Chrome ni serveur, sur Android comme sur iPhone. Limite : modifier une tâche dans TDA ne met pas à jour l'agenda (sauf à réexporter).
-2. **Appli native (phase 4 avancée)** : Capacitor + Firebase Cloud Messaging et notifications locales planifiées par le système. C'est la solution la plus fiable, mais elle demande les stores et un Mac pour iPhone.
+2. **Appli native (phase 4 avancée)** : Capacitor + Firebase Cloud Messaging et notifications locales planifiées par le système. C'est la solution la plus fiable ; pour iPhone, voir la section « Appli iPhone de test, sans Mac ».
 
 ## À valider avec Learnhavior (3 psychologues, dont Sandra)
 _Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artifact/NfwuV8XGJ5onk4R1PxPnoB_
@@ -73,6 +81,7 @@ _Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artif
 - Les modèles de l'assistant : la liste convient-elle ? D'autres à ajouter (rendez-vous de suivi, routine du matin / du soir, pause, s'hydrater…) ?
 - Médicament : une tâche par prise (« Prendre X (1/3 · 8h) »). Est-ce lisible, ou vaut-il mieux une seule tâche avec plusieurs heures ?
 - Imposer le découpage en étapes au-delà d'une certaine durée ?
+- Test iPhone : qui a un iPhone parmi elles, et l'identifiant Apple (e-mail) de chacune pour l'invitation TestFlight.
 
 ## Phases suivantes
 - **Phase 3 — comptes avec chiffrement de bout en bout (facultatif)** : synchronisation entre appareils + copie de secours, en ne remplaçant que `js/stockage.js`. Les tâches sont chiffrées SUR le téléphone : le serveur ne stocke qu'un bloc illisible (objectif : impossibilité pour nous de voir les données, mais restauration possible si la personne perd son téléphone). RGPD renforcé, page de confidentialité à revoir.
@@ -80,4 +89,4 @@ _Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artif
   - Écartés pour la sauvegarde : e-mail (serveur qui lit les tâches, adresse à stocker, spam, coût) ; Google Drive (validation Google, reconnexions, exclut les non-Google).
   - Récupération si mot de passe ET e-mail perdus : un formulaire anonyme ne peut pas prouver qui est la personne, et sans clé personne ne peut déchiffrer → il faut un moyen de secours gardé par la personne (choix à faire avec Learnhavior, voir plus haut). Garder la sauvegarde fichier en parallèle.
   - À faire : plan en 5 points avant de commencer.
-- **Phase 4 — stores** : Android via PWABuilder ou Bubblewrap (environ 25 $ une seule fois) ; iPhone via Capacitor (Mac + environ 99 $ par an).
+- **Phase 4 — stores** : Android via PWABuilder ou Bubblewrap (environ 25 $ une seule fois) ; iPhone via Capacitor + TestFlight puis App Store (compte développeur Apple, environ 99 $ par an ; pas besoin de Mac grâce à GitHub Actions).
