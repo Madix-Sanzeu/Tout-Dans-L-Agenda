@@ -39,6 +39,14 @@
 
   <main class="contenu">
 
+    <!-- GARDE-FOU : affiché quand les rappels appli fermée sont activés mais que
+         le téléphone a retiré la permission de notifications (voir app.js, verifierRappels) -->
+    <div id="alerte-rappels" class="alerte-rappels" role="alert" hidden>
+      <p><strong>⚠️ Vos rappels sont coupés</strong><br>
+        Le téléphone a désactivé les notifications de TDA. Sans elles, aucun rappel n'arrive quand l'appli est fermée.</p>
+      <button type="button" id="bouton-reactiver-rappels" class="bouton-principal">🔔 Réactiver les rappels</button>
+    </div>
+
     <!-- ============ LA TÂCHE À FAIRE MAINTENANT ============ -->
     <section aria-labelledby="titre-maintenant">
       <h2 id="titre-maintenant" class="titre-section">Maintenant</h2>

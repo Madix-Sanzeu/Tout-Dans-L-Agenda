@@ -303,3 +303,13 @@ button { cursor: pointer; }
 #etape-questions .champ[hidden] { display: none; }
 #texte-confirmation { white-space: pre-line; }
 .version-appli { font-size: .75rem; opacity: .7; margin-top: 6px; }
+
+/* ---------- Garde-fou : rappels coupés ---------- */
+.alerte-rappels {
+  margin: 4px 0 8px; padding: 14px 16px; border-radius: var(--rayon);
+  background: color-mix(in srgb, var(--danger) 10%, var(--carte));
+  border: 2px solid var(--danger); color: var(--texte);
+}
+.alerte-rappels p { margin: 0 0 10px; }
+.alerte-rappels strong { color: var(--danger); }
+.alerte-rappels button { width: 100%; min-height: 48px; }

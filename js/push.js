@@ -193,14 +193,22 @@ TDA.push = (function () {
     }
   }
 
-  // Au démarrage : l'adresse de notification du téléphone a-t-elle changé
-  // (ou disparu) depuis l'activation ? Si oui, on se réenregistre.
+  // Au démarrage et au retour dans l'appli : les rappels fonctionnent-ils ?
+  // Renvoie un état, utilisé par app.js pour afficher (ou non) le garde-fou :
+  //   'inactif' : l'option n'est pas activée (rien à signaler)
+  //   'ok'      : abonnement valide et rappels envoyés au serveur
+  //   'coupe'   : l'option est activée MAIS le téléphone a retiré la permission
+  //               de notifications (ça arrive sur certains téléphones, sans que
+  //               la personne n'ait rien fait). Il faut un toucher pour réactiver :
+  //               un navigateur n'autorise la demande qu'après un geste de l'utilisateur.
+  //   'erreur'  : problème réseau ou serveur (on réessaiera plus tard)
+  // Si l'adresse de notification a changé, on se réenregistre tout seul.
   async function verifier(taches) {
     const etat = lireEtat();
-    if (!etat || !serveurConfigure() || !compatible()) return;
+    if (!etat || !serveurConfigure() || !compatible()) return 'inactif';
     if (Notification.permission !== 'granted') {
-      noterSynchro(false, 'Notifications bloquées dans les réglages du téléphone');
-      return;
+      noterSynchro(false, 'Permission de notifications retirée par le téléphone');
+      return 'coupe';
     }
     try {
       const sw = await navigator.serviceWorker.ready;
@@ -211,9 +219,23 @@ TDA.push = (function () {
       } else {
         await synchroniserMaintenant(taches);
       }
+      return 'ok';
     } catch (e) {
       console.warn('Vérification push :', e);
+      return 'erreur';
     }
+  }
+
+  // RÉACTIVER (bouton du garde-fou, donc après un toucher de l'utilisateur) :
+  // redemande la permission, puis réenregistre l'appareil avec une adresse neuve.
+  async function reactiver(taches) {
+    const etat = lireEtat();
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      throw new Error('Le téléphone refuse les notifications : autorisez-les pour TDA dans ses réglages, puis réessayez.');
+    }
+    await enregistrer(taches, etat ? etat.masquerTitres : false);
+    noterSynchro(true, 'Rappels réactivés');
   }
 
   // Demande au serveur d'envoyer TOUT DE SUITE une notification de test
@@ -249,5 +271,5 @@ TDA.push = (function () {
     ecrireEtat(null);
   }
 
-  return { serveurConfigure, compatible, estActif, lireEtat, activer, planifierSynchro, changerMasquage, desactiver, verifier, tester };
+  return { serveurConfigure, compatible, estActif, lireEtat, activer, planifierSynchro, changerMasquage, desactiver, verifier, reactiver, tester };
 })();

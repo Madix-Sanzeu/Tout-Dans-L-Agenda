@@ -967,6 +967,29 @@ TDA.app = (function () {
     }
   }
 
+  // GARDE-FOU : vérifie que les rappels appli fermée fonctionnent toujours.
+  // Si le téléphone a retiré la permission de notifications, on affiche
+  // un bandeau rouge en haut de l'écran principal, avec un bouton pour
+  // tout réactiver d'un toucher. Fonctionne sur tous les téléphones :
+  // on ne regarde que ce que le navigateur dit réellement.
+  async function verifierRappels() {
+    const resultat = await TDA.push.verifier(etat.taches);
+    $('alerte-rappels').hidden = resultat !== 'coupe';
+  }
+
+  async function reactiverRappels() {
+    const bouton = $('bouton-reactiver-rappels');
+    bouton.disabled = true;
+    try {
+      await TDA.push.reactiver(etat.taches);
+      $('alerte-rappels').hidden = true;
+      afficherBandeau('Rappels réactivés 🔔 Ils arriveront même appli fermée.');
+    } catch (e) {
+      afficherBandeau(e.message);
+    }
+    bouton.disabled = false;
+  }
+
   // "Envoyer une notification de test" : le serveur l'envoie dans la minute.
   async function testerPush() {
     const bouton = $('bouton-tester-push');
@@ -1195,12 +1218,15 @@ TDA.app = (function () {
     $('bouton-enregistrer-reglages').addEventListener('click', enregistrerReglages);
     $('bouton-fermer-reglages').addEventListener('click', () => $('dialogue-reglages').close());
     $('bouton-notifications').addEventListener('click', async () => {
-      await TDA.rappels.demanderAutorisation();
+      // Rappels appli fermée déjà activés : on réactive TOUT (permission + abonnement).
+      if (TDA.push.estActif()) await reactiverRappels();
+      else await TDA.rappels.demanderAutorisation();
       afficherEtatNotifications();
     });
     $('bouton-activer-push').addEventListener('click', activerPush);
     $('bouton-desactiver-push').addEventListener('click', desactiverPush);
     $('bouton-tester-push').addEventListener('click', testerPush);
+    $('bouton-reactiver-rappels').addEventListener('click', reactiverRappels);
     $('push-masquer-titres-actif').addEventListener('change', e =>
       TDA.push.changerMasquage(etat.taches, e.target.checked).catch(err => afficherBandeau(err.message)));
     $('bouton-exporter').addEventListener('click', exporter);
@@ -1210,7 +1236,7 @@ TDA.app = (function () {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) return;
       tic();
-      TDA.push.verifier(etat.taches); // retour dans l'appli : on revérifie l'abonnement push
+      verifierRappels(); // retour dans l'appli : on revérifie les rappels push
     });
   }
 
@@ -1248,7 +1274,7 @@ TDA.app = (function () {
     $('lien-avis').href = TDA.config.LIEN_AVIS;
     // Au démarrage : vérifie l'abonnement push (et le répare si besoin),
     // puis envoie les rappels à jour au serveur.
-    TDA.push.verifier(etat.taches);
+    verifierRappels();
 
     if (TDA.config.LIEN_DON) {
       $('lien-don').href = TDA.config.LIEN_DON;

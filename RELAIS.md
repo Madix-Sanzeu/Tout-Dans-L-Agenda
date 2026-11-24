@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 24/11/2026 : réparation automatique des rappels push + bouton de test (`tda-v12`)._
+_Mis à jour le 24/11/2026 : garde-fou « rappels coupés » (`tda-v13`) ; diagnostic Xiaomi/Chrome._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -29,6 +29,8 @@ _Mis à jour le 24/11/2026 : réparation automatique des rappels push + bouton d
 - **Assistant « 🔁 Rappel récurrent »** (24/11, `js/modeles.js`, `sw.js` en `tda-v9`) : 7 modèles. 🎂 Anniversaire (rappel cadeau X jours avant ; âge affiché dans le titre si l'année est connue, mis à jour chaque année — `tda-v10`), 💊 Médicament (1 à 6 prises par jour, tous les jours / certains jours / tous les N jours, pas d'arrêt / N jours / jusqu'au…), 🧾 Facture ou paiement, 📄 Renouvellement, 📅 Chaque semaine, 🌱 Tous les N jours, ✏️ Personnalisé. Séries supprimables d'un coup ; date de fin dans le moteur ; personnalisation via ✎ (« Répéter » + « jusqu'au »). Le champ « Répéter » n'apparaît plus à la création d'une tâche simple. Testé dans Chrome : les 7 modèles, prises programmées, suppression de série, aucune erreur.
 - Mise à jour des téléphones fiabilisée (24/11, `tda-v11`) : `sw.js` vérifie chaque fichier auprès du serveur (`cache: 'no-cache'`) au lieu de se fier à la mémoire de 10 min de GitHub Pages, qui pouvait mélanger une page neuve et d'anciens scripts. Numéro de version affiché en bas de l'appli. **Vérifié sur téléphone le 24/11** : mise à jour reçue, assistant « Rappel récurrent » et âge des anniversaires OK.
 - **Incident du 24/11 : plus de rappels appli fermée.** Dans la nuit, le serveur a effacé l'abonnement du téléphone (adresse de notification refusée par Google, probablement notifications coupées ou économies de batterie MIUI). L'appli ne s'en apercevait pas et le serveur refusait ses synchronisations (403). Corrigé (`tda-v12`) : réparation automatique (réabonnement au démarrage, au retour dans l'appli, sur erreur 403 ou changement d'adresse), état de la dernière synchronisation dans ⚙️, bouton « Envoyer une notification de test » (action serveur `tester`), journal côté serveur quand un abonnement expire. Fonctions `tda-rappels` et `tda-envoi` redéployées. Testé dans Chrome avec un faux serveur ; à vérifier sur le téléphone.
+- **Diagnostic (24/11, Xiaomi + Chrome)** : le site est « géré par l'application » TDA (permission déléguée à l'appli installée). Android autorise les notifications pour TDA et pour Chrome, mais à chaque ouverture la page voit la permission « non accordée ». Chrome annule alors l'abonnement push, Google répond 410 au serveur, l'appareil est effacé. Défaut Chrome / appli web installée, pas de l'appli ni du serveur. Test de notification : OK une fois (12:54–12:55), puis adresse annulée à 12:57.
+- **Garde-fou (`tda-v13`)** : bandeau rouge « ⚠️ Vos rappels sont coupés » sur l'écran principal dès que la permission a sauté, bouton « Réactiver les rappels » (permission + réabonnement en un toucher). Le bouton « Activer les notifications » de ⚙️ fait la même chose. Testé dans Chrome (3 cas : OK, coupé puis réactivé, coupé puis refusé).
 - Tests dans un navigateur : appli, réglages et pages OK, aucune erreur ; fonctions serveur vérifiées pour la syntaxe uniquement (pas d'environnement Deno ici).
 
 ## Reste à faire pour finir la phase 2
@@ -38,6 +40,11 @@ _Mis à jour le 24/11/2026 : réparation automatique des rappels push + bouton d
 1 bis. Tester une tâche récurrente sur téléphone (ex. rappel quotidien) pendant 2–3 jours, appli fermée.
 2. Relire `confidentialite.html` et `mentions-legales.html`, et choisir un contact plus simple que GitHub pour les testeurs (email, formulaire).
 3. Plus tard : choisir la plateforme de don.
+
+## Décision à prendre : rappels fiables sur TOUS les téléphones
+Le push web dépend du bon accord entre Chrome et le système, et ce n'est pas le cas partout (Xiaomi). Pistes universelles :
+1. **« Ajouter à mon agenda »** : exporter les rappels importants (médicaments, anniversaires, factures) vers l'agenda du téléphone (fichier .ics, avec répétition et alarme). C'est le système qui sonne, sans Chrome ni serveur, sur Android comme sur iPhone. Limite : modifier une tâche dans TDA ne met pas à jour l'agenda (sauf à réexporter).
+2. **Appli native (phase 4 avancée)** : Capacitor + Firebase Cloud Messaging et notifications locales planifiées par le système. C'est la solution la plus fiable, mais elle demande les stores et un Mac pour iPhone.
 
 ## À valider avec Learnhavior (3 psychologues, dont Sandra)
 _Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artifact/NfwuV8XGJ5onk4R1PxPnoB_
