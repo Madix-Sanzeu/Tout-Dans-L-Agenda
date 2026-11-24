@@ -38,7 +38,7 @@ Le code est sur <https://github.com/Madix-Sanzeu/Tout-Dans-L-Agenda>. L'appli es
 **Les fichiers :**
 - `capacitor.config.json` : identifiant de l'appli (`io.github.madixsanzeu.tda`, à ne jamais changer une fois l'appli distribuée) et nom affiché sous l'icône (`appName`).
 - `package.json` : les outils Capacitor utilisés par GitHub.
-- `assets/icon-only.png` : l'icône de l'appli (1024 × 1024).
+- `android-ressources/icones/` : l'icône de l'appli, toute prête à chaque taille d'Android (copiée telle quelle par GitHub).
 - `android-ressources/ic_stat_tda.xml` : la petite icône blanche des notifications.
 
 **Clé de signature.** Android n'accepte une mise à jour que si elle est signée avec la même clé que la version installée.

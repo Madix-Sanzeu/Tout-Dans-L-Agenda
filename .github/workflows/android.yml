@@ -92,13 +92,10 @@ jobs:
           # Petite icône blanche des notifications
           mkdir -p android/app/src/main/res/drawable
           cp android-ressources/ic_stat_tda.xml android/app/src/main/res/drawable/
-          # Icône de l'appli : assets/icon-foreground.png (le logo, fond transparent)
-          # + assets/icon-background.png (fond blanc). Pas de icon-only.png :
-          # sinon l'outil l'utilise à la place et rétrécit le logo.
-          npx @capacitor/assets generate --android \
-            --iconBackgroundColor '#ffffff' --iconBackgroundColorDark '#ffffff' \
-            --splashBackgroundColor '#f5f3ee' --splashBackgroundColorDark '#12161f' \
-            || echo "Icônes : on garde celles par défaut"
+          # Icône de l'appli : images toutes prêtes dans android-ressources/icones
+          # (logo/logo-tda.png aux tailles d'Android, galet jamais coupé).
+          cp -r android-ressources/icones/* android/app/src/main/res/
+          ls android/app/src/main/res/mipmap-xxxhdpi/
           # Numéro de version = numéro de la fabrication (indispensable pour les mises à jour)
           sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle

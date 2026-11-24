@@ -55,7 +55,7 @@ TDA - Tout Dans lAgenda/
 ├── aide.html, confidentialite.html, mentions-legales.html   Pages publiques
 ├── supabase/         Le serveur de rappels push (base de données + 2 fonctions)
 ├── DEPLOIEMENT.md    Comment mettre en ligne l'appli, l'APK Android et le serveur
-├── capacitor.config.json, package.json, assets/, android-ressources/   Appli Android (voir DEPLOIEMENT.md)
+├── capacitor.config.json, package.json, android-ressources/   Appli Android (voir DEPLOIEMENT.md)
 ├── .github/workflows/android.yml   GitHub fabrique l'APK tout seul à chaque modification
 ├── manifest.json     Carte d'identité de l'appli (nom, icône, couleurs)
 ├── icone.svg / .png  L'icône (le τ dans son galet pêche)
@@ -267,7 +267,7 @@ Les dates sont en heure universelle (le `Z` final) ; l'affichage les convertit e
 | Changer la durée de « Pas maintenant » | `js/config.js` | `REPORT_MINUTES` |
 | Afficher le bouton de don | `js/config.js` | Mettre l'adresse dans `LIEN_DON` |
 | Changer une couleur générale | `css/style.css` | Variables au début du fichier (`--principal`, `--fond`…) |
-| Changer le logo / l'icône | `logo/` | Le logo est une **image** (`logo/logo-tda-original.png` = modèle exact ; `logo/logo-tda.png` = même image sans le fond blanc). Pour le changer : remplacer cette image, puis refaire `icone.svg` (l'image y est glissée), `icone-192.png`, `icone-512.png` (fond blanc, marge plus large car le téléphone peut rogner en rond) et, pour Android, `assets/icon-foreground.png` (logo au centre, fond transparent : le téléphone n'en montre que les 2/3 du milieu ; ne pas remettre de `icon-only.png`, qui ferait rétrécir le logo) ; puis augmenter `VERSION` dans `sw.js`. Le plus simple : demander à Claude |
+| Changer le logo / l'icône | `logo/` | Le logo est une **image** (`logo/logo-tda-original.png` = modèle exact ; `logo/logo-tda.png` = même image sans le fond blanc). Pour le changer : remplacer cette image, puis refaire `icone.svg` (l'image y est glissée), `icone-192.png`, `icone-512.png` (fond blanc, marge plus large car le téléphone peut rogner en rond) et, pour Android, les images de `android-ressources/icones/` (5 tailles ; dans `ic_launcher_foreground.png`, le téléphone n'affiche que les 2/3 du milieu et peut rogner en rond : le galet doit tenir dans ce cercle) ; puis augmenter `VERSION` dans `sw.js`. Le plus simple : demander à Claude |
 | **Changer le nom de l'appli** | plusieurs fichiers | 1) `js/config.js` → `NOM` ; 2) `manifest.json` → `name` et `short_name` ; 3) `capacitor.config.json` → `appName` (nom sous l'icône Android) ; 4) les titres des pages HTML (chercher « Tout Dans l'Agenda » avec `Ctrl + Maj + F` dans VS Code) ; 5) `sw.js` (titre par défaut des notifications). Ne **jamais** changer `appId` dans `capacitor.config.json` |
 | Changer un texte affiché | `index.html` ou `js/app.js` | Chercher le texte (`Ctrl + F`) et le remplacer |
 | Publier une nouvelle version en ligne | `sw.js` | Augmenter `VERSION` (`tda-v1` → `tda-v2`), sinon les téléphones gardent l'ancienne. Le numéro s'affiche en bas de l'appli (« Version tda-v… ») : c'est le moyen de vérifier qu'un téléphone est à jour |
