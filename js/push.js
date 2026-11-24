@@ -16,6 +16,11 @@
 
    Désactiver = tout ce qui concerne cet appareil est effacé du serveur.
 
+   APPLI ANDROID : dans l'appli installée depuis l'APK (voir natif.js), pas
+   de serveur ni d'Internet : chaque fonction ci-dessous passe la main à
+   TDA.natif, qui demande à Android de programmer les rappels lui-même.
+   Le reste de l'appli (garde-fou, bouton de test…) ne voit aucune différence.
+
    RÉPARATION AUTOMATIQUE : l'adresse de notification d'un téléphone peut
    expirer (Google/Apple la renouvellent, économies de batterie…). Le
    serveur efface alors l'appareil. L'appli s'en rend compte (au démarrage
@@ -31,13 +36,18 @@ TDA.push = (function () {
   const C = () => TDA.config.PUSH;
 
   // Le serveur est-il configuré (dans config.js) ?
+  // Dans l'appli Android ? (voir natif.js)
+  const natif = () => Boolean(TDA.natif && TDA.natif.estNatif());
+
   function serveurConfigure() {
+    if (natif()) return true;
     return Boolean(C().URL_SUPABASE && C().CLE_PUBLIQUE_SUPABASE);
   }
 
   // Ce navigateur sait-il recevoir des notifications push ?
   // (Sur iPhone : seulement si l'appli a été ajoutée à l'écran d'accueil.)
   function compatible() {
+    if (natif()) return true;
     return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   }
 
@@ -45,7 +55,14 @@ TDA.push = (function () {
   const lireEtat = () => TDA.stockage.lirePush();
   const ecrireEtat = (valeur) => TDA.stockage.ecrirePush(valeur);
 
-  function estActif() { return Boolean(lireEtat()); }
+  function estActif() {
+    if (natif()) {
+      // Dans l'appli Android, les rappels sont TOUJOURS actifs (rien ne sort du téléphone).
+      if (!lireEtat()) ecrireEtat({ natif: true, masquerTitres: false });
+      return true;
+    }
+    return Boolean(lireEtat());
+  }
 
   // Un texte aléatoire de n octets, en hexadécimal (pour l'identifiant et le secret).
   function aleatoire(octets) {
@@ -155,6 +172,7 @@ TDA.push = (function () {
 
   // 2. SYNCHRONISER — on attend 2 s pour regrouper plusieurs changements rapides.
   function planifierSynchro(taches) {
+    if (natif()) return TDA.natif.planifier(taches);
     if (!estActif()) return;
     clearTimeout(minuteur);
     minuteur = setTimeout(() => synchroniserMaintenant(taches).catch(e => console.warn('Synchro push :', e)), 2000);
@@ -204,6 +222,12 @@ TDA.push = (function () {
   //   'erreur'  : problème réseau ou serveur (on réessaiera plus tard)
   // Si l'adresse de notification a changé, on se réenregistre tout seul.
   async function verifier(taches) {
+    if (natif()) {
+      estActif();
+      const r = await TDA.natif.verifier(taches);
+      noterSynchro(r === 'ok', r === 'ok' ? 'Rappels programmés sur le téléphone' : 'Notifications refusées par le téléphone');
+      return r;
+    }
     const etat = lireEtat();
     if (!etat || !serveurConfigure() || !compatible()) return 'inactif';
     if (Notification.permission !== 'granted') {
@@ -229,6 +253,11 @@ TDA.push = (function () {
   // RÉACTIVER (bouton du garde-fou, donc après un toucher de l'utilisateur) :
   // redemande la permission, puis réenregistre l'appareil avec une adresse neuve.
   async function reactiver(taches) {
+    if (natif()) {
+      await TDA.natif.reactiver(taches);
+      noterSynchro(true, 'Rappels réactivés');
+      return;
+    }
     const etat = lireEtat();
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
@@ -241,6 +270,7 @@ TDA.push = (function () {
   // Demande au serveur d'envoyer TOUT DE SUITE une notification de test
   // (elle arrive en moins d'une minute, même appli fermée).
   async function tester(taches) {
+    if (natif()) return TDA.natif.tester();
     await synchroniserMaintenant(taches);                       // répare d'abord si besoin
     await appelerServeur('tester');
   }
@@ -271,5 +301,5 @@ TDA.push = (function () {
     ecrireEtat(null);
   }
 
-  return { serveurConfigure, compatible, estActif, lireEtat, activer, planifierSynchro, changerMasquage, desactiver, verifier, reactiver, tester };
+  return { serveurConfigure, compatible, estActif, lireEtat, activer, planifierSynchro, changerMasquage, desactiver, verifier, reactiver, tester, rappelsAVenir };
 })();

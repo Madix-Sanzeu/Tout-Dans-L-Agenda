@@ -226,8 +226,11 @@
       <button type="button" id="bouton-nouveau-moment" class="bouton-secondaire">＋ Nouveau moment</button>
 
       <h3>Rappels</h3>
-      <p id="etat-notifications" class="info"></p>
-      <button type="button" id="bouton-notifications" class="bouton-secondaire">Activer les notifications</button>
+      <!-- Version web seulement (caché dans l'appli Android) -->
+      <div id="bloc-notifications-web">
+        <p id="etat-notifications" class="info"></p>
+        <button type="button" id="bouton-notifications" class="bouton-secondaire">Activer les notifications</button>
+      </div>
 
       <div class="bloc-push">
         <h4>🔔 Rappels même appli fermée</h4>
@@ -242,8 +245,16 @@
           <p id="etat-synchro-push" class="info"></p>
           <button type="button" id="bouton-tester-push" class="bouton-secondaire">🔔 Envoyer une notification de test</button>
           <p class="aide">Elle arrive en moins d'une minute : vous pouvez fermer l'appli pour vérifier que les rappels arrivent bien appli fermée.</p>
-          <label class="interrupteur"><input type="checkbox" id="push-masquer-titres-actif"> <span>Masquer les titres</span></label>
-          <button type="button" id="bouton-desactiver-push" class="bouton-danger">Désactiver et effacer mes données du serveur</button>
+          <!-- Appli Android : autoriser les rappels "à la minute près" (Android 12 et plus) -->
+          <div id="zone-alarmes-exactes" hidden>
+            <p class="aide aide-forte">Pour que les rappels sonnent à la minute près (et non avec quelques minutes de retard), autorisez les « alarmes et rappels » pour TDA.</p>
+            <button type="button" id="bouton-alarmes-exactes" class="bouton-secondaire">⏰ Autoriser les rappels à la minute près</button>
+          </div>
+          <!-- Version web seulement (le serveur de rappels) -->
+          <div id="zone-serveur-push">
+            <label class="interrupteur"><input type="checkbox" id="push-masquer-titres-actif"> <span>Masquer les titres</span></label>
+            <button type="button" id="bouton-desactiver-push" class="bouton-danger">Désactiver et effacer mes données du serveur</button>
+          </div>
         </div>
       </div>
 
@@ -283,7 +294,7 @@
 
   <!-- ============ LES SCRIPTS ============
        L'ORDRE COMPTE : chaque fichier utilise ceux chargés avant lui.
-       config → stockage → moments → priorite → rappels → recurrence → modeles → push → app -->
+       config → stockage → moments → priorite → rappels → recurrence → modeles → natif → push → app -->
   <script src="js/config.js"></script>
   <script src="js/stockage.js"></script>
   <script src="js/moments.js"></script>
@@ -291,6 +302,7 @@
   <script src="js/rappels.js"></script>
   <script src="js/recurrence.js"></script>
   <script src="js/modeles.js"></script>
+  <script src="js/natif.js"></script>
   <script src="js/push.js"></script>
   <script src="js/app.js"></script>
 </body>

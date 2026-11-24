@@ -935,6 +935,8 @@ TDA.app = (function () {
   }
 
   function afficherEtatNotifications() {
+    // Dans l'appli Android, les notifications sont gérées par Android (bloc caché).
+    $('bloc-notifications-web').hidden = TDA.natif.estNatif();
     const textes = {
       granted: '✅ Notifications activées (elles sonnent quand l\'appli est ouverte ou en arrière-plan récent).',
       denied: '🚫 Notifications refusées. Réactivez-les dans les réglages du navigateur ; en attendant, un bandeau s\'affiche dans l\'appli.',
@@ -950,19 +952,26 @@ TDA.app = (function () {
   function afficherEtatPush() {
     const actif = TDA.push.estActif();
     let message = '';
-    if (!TDA.push.serveurConfigure()) message = '⏳ Bientôt disponible.';
+    const natif = TDA.natif.estNatif();
+    if (natif) message = '📱 Appli Android : les rappels sont programmés directement sur le téléphone, sans Internet ni serveur.';
+    else if (!TDA.push.serveurConfigure()) message = '⏳ Bientôt disponible.';
     else if (actif) message = '✅ Activé sur cet appareil.';
     else if (!TDA.push.compatible()) message = 'Non disponible dans ce navigateur. Sur iPhone : ajoutez d\'abord l\'appli à l\'écran d\'accueil (voir « Installer l\'appli »).';
     $('etat-push').textContent = message;
     $('zone-activer-push').hidden = actif || !TDA.push.serveurConfigure() || !TDA.push.compatible();
     $('zone-desactiver-push').hidden = !actif;
+    $('zone-serveur-push').hidden = natif;          // pas de serveur dans l'appli Android
+    $('zone-alarmes-exactes').hidden = true;
+    if (natif) {
+      TDA.natif.alarmesExactes().then(ok => { $('zone-alarmes-exactes').hidden = ok; });
+    }
     if (actif) {
       const etatPush = TDA.push.lireEtat();
       $('push-masquer-titres-actif').checked = Boolean(etatPush.masquerTitres);
       // La dernière synchronisation : OK (✅) ou le problème rencontré (⚠️)
       const s = etatPush.derniereSynchro;
       $('etat-synchro-push').textContent = s
-        ? `${s.ok ? '✅' : '⚠️'} Dernière synchronisation : ${dateLisible(s.quand)}${s.message ? ' — ' + s.message : ''}`
+        ? `${s.ok ? '✅' : '⚠️'} ${natif ? 'Dernière vérification' : 'Dernière synchronisation'} : ${dateLisible(s.quand)}${s.message ? ' — ' + s.message : ''}`
         : 'Pas encore synchronisé.';
     }
   }
@@ -1054,6 +1063,17 @@ TDA.app = (function () {
     const texte = JSON.stringify(TDA.stockage.exporter(), null, 2);
     const nom = 'tda-sauvegarde-' + new Date().toISOString().slice(0, 10);
 
+    // Appli Android : on passe par le menu "Partager" d'Android (voir natif.js).
+    if (TDA.natif.estNatif()) {
+      try {
+        await TDA.natif.partagerFichier(nom + '.json', texte);
+        sauvegardeReussie();
+      } catch (e) {
+        if (!/cancel|annul/i.test(e.message || '')) afficherBandeau('Sauvegarde impossible : ' + e.message);
+      }
+      return;
+    }
+
     // Certains téléphones refusent de partager un .json : on tente alors un .txt
     // (même contenu ; "Restaurer" accepte les deux).
     const essais = [
@@ -1064,7 +1084,7 @@ TDA.app = (function () {
 
     if (fichier) {
       try {
-        await navigator.share({ files: [fichier], title: 'Sauvegarde Tout Dans l\'Agenda' });
+        await navigator.share({ files: [fichier], title: 'Sauvegarde ' + TDA.config.NOM });
         sauvegardeReussie();
       } catch (e) {
         // "AbortError" = la personne a fermé le menu : ce n'est pas une erreur.
@@ -1227,6 +1247,9 @@ TDA.app = (function () {
     $('bouton-desactiver-push').addEventListener('click', desactiverPush);
     $('bouton-tester-push').addEventListener('click', testerPush);
     $('bouton-reactiver-rappels').addEventListener('click', reactiverRappels);
+    $('bouton-alarmes-exactes').addEventListener('click', async () => {
+      await TDA.natif.ouvrirReglageAlarmesExactes();   // ouvre le réglage Android
+    });
     $('push-masquer-titres-actif').addEventListener('change', e =>
       TDA.push.changerMasquage(etat.taches, e.target.checked).catch(err => afficherBandeau(err.message)));
     $('bouton-exporter').addEventListener('click', exporter);
@@ -1293,7 +1316,8 @@ TDA.app = (function () {
     // Le "service worker" (sw.js) permet l'installation et le hors-ligne.
     // Il ne fonctionne que si la page est servie par un serveur web (http/https),
     // pas en double-cliquant sur le fichier : d'où cette vérification.
-    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    // Inutile dans l'appli Android : les fichiers sont déjà dans l'appli.
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !TDA.natif.estNatif()) {
       navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker :', e));
     }
   }

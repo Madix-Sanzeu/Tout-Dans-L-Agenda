@@ -19,6 +19,13 @@ window.TDA = window.TDA || {};
 
 TDA.config = {
 
+  /* ---------- Le nom de l'appli ----------
+     Utilisé dans les textes fabriqués par le JavaScript (notifications,
+     sauvegardes…). Pour CHANGER DE NOM, voir la recette dans GUIDE.md :
+     il faut aussi modifier quelques fichiers HTML, manifest.json et
+     capacitor.config.json (appli Android). */
+  NOM: 'Tout Dans l\'Agenda',
+
   /* ---------- Les étiquettes de priorité ----------
      Une tâche peut en avoir plusieurs à la fois (elles se cumulent).
      - id      : nom technique (sans accent ni espace), ne pas le changer

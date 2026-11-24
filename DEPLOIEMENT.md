@@ -21,7 +21,37 @@ Le code est sur <https://github.com/Madix-Sanzeu/Tout-Dans-L-Agenda>. L'appli es
 
 ---
 
+## 1 bis. L'appli Android (APK)
+
+**Pourquoi.** Sur certains téléphones, notamment les Xiaomi, Chrome retire tout seul la permission de notifications de la version web installée : les rappels push ne sont pas fiables. Dans une vraie appli Android, les rappels sont programmés par Android lui-même (notifications locales, comme une alarme). Ils sonnent appli fermée, sans Internet et sans serveur.
+
+**Comment.** **Capacitor** emballe les mêmes fichiers web (HTML, CSS, JS) dans une appli Android. Le code reste le même : seul `js/natif.js` sert dans l'appli, pour programmer les rappels et pour la sauvegarde. Dans le navigateur, il ne fait rien.
+
+**Qui fabrique l'APK : GitHub, tout seul.** À chaque envoi sur `main`, le workflow `.github/workflows/android.yml` installe Capacitor, copie l'appli dans `www/`, crée le projet Android, fabrique l'APK et le publie ici :
+
+**<https://github.com/Madix-Sanzeu/Tout-Dans-L-Agenda/releases/download/apk/TDA.apk>**
+
+- Suivre une fabrication : onglet **Actions** du dépôt (environ 5 minutes).
+- Relancer à la main : **Actions → Appli Android (APK) → Run workflow**.
+- Les dossiers `www/`, `android/` et `node_modules/` sont fabriqués à chaque fois : ils ne sont jamais enregistrés dans le dépôt.
+
+**Les fichiers :**
+- `capacitor.config.json` : identifiant de l'appli (`io.github.madixsanzeu.tda`, à ne jamais changer une fois l'appli distribuée) et nom affiché sous l'icône (`appName`).
+- `package.json` : les outils Capacitor utilisés par GitHub.
+- `assets/icon-only.png` : l'icône de l'appli (1024 × 1024).
+- `android-ressources/ic_stat_tda.xml` : la petite icône blanche des notifications.
+
+**Clé de signature.** Android n'accepte une mise à jour que si elle est signée avec la même clé que la version installée. La clé est créée par GitHub à la première fabrication et gardée dans son cache privé (`tda-cle-signature-v1`). ⚠️ GitHub vide un cache inutilisé pendant 7 jours. Si la clé change, il faut désinstaller l'ancienne appli avant d'installer la nouvelle, et donc **sauvegarder ses tâches d'abord**. Avant de distribuer l'appli largement, il faudra passer à une clé permanente rangée dans les secrets GitHub (voir RELAIS.md).
+
+**Rappels à la minute près.** L'APK déclare la permission `USE_EXACT_ALARM`, accordée d'office sur Android 13 et plus. ⚠️ Pour une future publication sur le Play Store, Google réserve cette permission aux applis d'agenda ou de réveil : il faudra peut-être passer à `SCHEDULE_EXACT_ALARM`, que la personne accorde elle-même. Le bouton « Autoriser les rappels à la minute près » de ⚙️ est déjà prévu pour ça.
+
+**Distribution.** L'APK s'installe sans store (« sideloading »). En France, c'est libre pour l'instant. Google prévoit d'exiger, d'ici 2027, que les applis installées hors store viennent d'un développeur vérifié (compte gratuit « distribution limitée » pour les usages personnels).
+
+---
+
 ## 2. Le serveur de rappels sur Supabase
+
+Il ne sert qu'à la **version web**. L'appli Android n'en a pas besoin.
 
 ### Comment ça marche
 

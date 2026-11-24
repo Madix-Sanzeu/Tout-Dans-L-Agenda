@@ -3,3 +3,12 @@ maquette-sandra.html
 *.secret
 .DS_Store
 Thumbs.db
+
+# Appli Android : fabriqués par GitHub, jamais enregistrés dans le dépôt
+node_modules/
+www/
+android/
+package-lock.json
+*.apk
+*.keystore
+*.jks

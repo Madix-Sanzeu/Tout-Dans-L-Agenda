@@ -48,12 +48,15 @@ TDA - Tout Dans lAgenda/
 │   ├── rappels.js    Les notifications quand l'appli est ouverte
 │   ├── recurrence.js Les dates des tâches qui reviennent (anniversaires, médicaments…)
 │   ├── modeles.js    Les modèles de l'assistant « Rappel récurrent » (questions + fabrication)
+│   ├── natif.js      Seulement dans l'appli Android : rappels programmés par Android, sauvegarde
 │   ├── push.js       Les rappels même appli fermée (dialogue avec le serveur)
 │   └── app.js        Le chef d'orchestre : affichage et clics
 ├── sw.js             Service worker : hors-ligne + réception des notifications push
 ├── aide.html, confidentialite.html, mentions-legales.html   Pages publiques
 ├── supabase/         Le serveur de rappels push (base de données + 2 fonctions)
-├── DEPLOIEMENT.md    Comment mettre en ligne l'appli et le serveur
+├── DEPLOIEMENT.md    Comment mettre en ligne l'appli, l'APK Android et le serveur
+├── capacitor.config.json, package.json, assets/, android-ressources/   Appli Android (voir DEPLOIEMENT.md)
+├── .github/workflows/android.yml   GitHub fabrique l'APK tout seul à chaque modification
 ├── manifest.json     Carte d'identité de l'appli (nom, icône, couleurs)
 ├── icone.svg / .png  L'icône
 ├── GUIDE.md          Ce guide
@@ -64,7 +67,7 @@ TDA - Tout Dans lAgenda/
 **Principe d'organisation :** chaque fichier JavaScript fait **une seule chose**. Ils sont chargés dans un ordre précis (en bas de `index.html`), car chacun utilise les précédents :
 
 ```
-config → stockage → moments → priorite → rappels → recurrence → modeles → push → app
+config → stockage → moments → priorite → rappels → recurrence → modeles → natif → push → app
 ```
 
 Tous rangent leurs fonctions dans un même « tiroir » global nommé `TDA` : `TDA.config`, `TDA.stockage`, `TDA.priorite`, etc. Ça évite les conflits de noms.
@@ -204,6 +207,20 @@ L'**ancre** est la première date. Toutes les dates suivantes sont calculées à
 
 ---
 
+## 7 ter. L'appli Android (`js/natif.js`)
+
+La même appli existe en deux versions :
+- **web** : dans le navigateur, ou installée depuis Chrome. Les rappels appli fermée passent par le serveur Supabase (push web) ;
+- **Android** : un vrai fichier APK, fabriqué par GitHub avec Capacitor. Les rappels sont programmés **par Android lui-même**, comme des alarmes : pas d'Internet, pas de serveur, pas de dépendance à Chrome.
+
+Comment le code sait où il tourne : `TDA.natif.estNatif()` renvoie `true` dans l'appli Android. Dans ce cas, `push.js` passe la main à `natif.js` pour programmer, vérifier, réactiver et tester les rappels. Le reste de l'appli (garde-fou, bouton de test, réglages) fonctionne de la même façon dans les deux versions.
+
+`natif.js` programme les rappels avec la même liste que celle envoyée au serveur dans la version web (`TDA.push.rappelsAVenir()`). À chaque modification, il annule tout et reprogramme, dans la limite de 400 rappels qu'impose Android.
+
+⚠️ Les deux versions ne partagent pas leurs tâches : chacune a sa propre mémoire. Pour passer de l'une à l'autre, on fait **Sauvegarder** d'un côté, puis **Restaurer** de l'autre.
+
+---
+
 ## 8. Les données
 
 Les données sont stockées dans le **localStorage** du navigateur, un petit espace propre à chaque site et à chaque appareil. Rien n'est envoyé sur Internet.
@@ -249,6 +266,7 @@ Les dates sont en heure universelle (le `Z` final) ; l'affichage les convertit e
 | Changer la durée de « Pas maintenant » | `js/config.js` | `REPORT_MINUTES` |
 | Afficher le bouton de don | `js/config.js` | Mettre l'adresse dans `LIEN_DON` |
 | Changer une couleur générale | `css/style.css` | Variables au début du fichier (`--principal`, `--fond`…) |
+| **Changer le nom de l'appli** | plusieurs fichiers | 1) `js/config.js` → `NOM` ; 2) `manifest.json` → `name` et `short_name` ; 3) `capacitor.config.json` → `appName` (nom sous l'icône Android) ; 4) les titres des pages HTML (chercher « Tout Dans l'Agenda » avec `Ctrl + Maj + F` dans VS Code) ; 5) `sw.js` (titre par défaut des notifications). Ne **jamais** changer `appId` dans `capacitor.config.json` |
 | Changer un texte affiché | `index.html` ou `js/app.js` | Chercher le texte (`Ctrl + F`) et le remplacer |
 | Publier une nouvelle version en ligne | `sw.js` | Augmenter `VERSION` (`tda-v1` → `tda-v2`), sinon les téléphones gardent l'ancienne. Le numéro s'affiche en bas de l'appli (« Version tda-v… ») : c'est le moyen de vérifier qu'un téléphone est à jour |
 

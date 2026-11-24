@@ -10,6 +10,7 @@ PWA de gestion de tâches pour personnes TDA(H), conçue avec Learnhavior (3 psy
 - Le stockage passe uniquement par `js/stockage.js` (pour pouvoir passer aux comptes en phase 3).
 - Après tout changement de fichier publié, augmenter `VERSION` dans `sw.js`.
 - Ne jamais publier de clé privée ni de clé `service_role` : seulement les clés publiques dans `js/config.js`. Les tâches restent sur l'appareil ; le serveur (`supabase/`) ne garde que le strict nécessaire pour les rappels push.
-- Déploiement : appli sur GitHub Pages (branche `main`), serveur sur Supabase ; voir `DEPLOIEMENT.md`.
+- Déploiement : appli sur GitHub Pages (branche `main`), serveur sur Supabase, APK Android fabriqué par GitHub Actions (Capacitor) ; voir `DEPLOIEMENT.md`. Tout ce qui est propre à Android passe par `js/natif.js` ; la version web doit continuer à marcher sans lui.
+- Nom de l'appli provisoire (changement prévu) : ne pas l'écrire en dur dans le JS (utiliser `TDA.config.NOM`) ; ne jamais changer `appId`.
 - Mettre à jour `GUIDE.md` quand l'architecture change et `RELAIS.md` à la fin de chaque session.
 - Plan en 5 points avant les gros changements ; une phase = une session.

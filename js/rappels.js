@@ -35,7 +35,7 @@ TDA.rappels = (function () {
   // Affiche une notification pour une tâche.
   async function notifier(tache) {
     const titre = '⏰ ' + tache.titre;
-    const options = { body: 'Tout Dans l\'Agenda — c\'est le moment !', icon: 'icone.svg', tag: tache.id };
+    const options = { body: TDA.config.NOM + ' — c\'est le moment !', icon: 'icone.svg', tag: tache.id };
 
     if (disponibles() && Notification.permission === 'granted') {
       try {
