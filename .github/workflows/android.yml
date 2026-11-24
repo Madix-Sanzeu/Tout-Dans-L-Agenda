@@ -108,6 +108,17 @@ jobs:
           ./gradlew assembleDebug --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk ../TDA.apk
 
+      # On SIGNE nous-mêmes l'APK avec la clé gardée par GitHub, pour être sûr
+      # que toutes les versions portent la même signature (sinon Android
+      # refuse la mise à jour : « package en conflit »).
+      - name: Signer l'APK avec la clé TDA
+        run: |
+          OUTIL=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)
+          "$OUTIL/apksigner" sign --ks ~/.android/debug.keystore --ks-pass pass:android \
+            --ks-key-alias androiddebugkey --key-pass pass:android TDA.apk
+          echo "Empreinte de la signature (doit être la même à chaque version) :"
+          "$OUTIL/apksigner" verify --print-certs TDA.apk | grep "SHA-256"
+
       - name: Garder une copie dans « Actions »
         uses: actions/upload-artifact@v4
         with:
