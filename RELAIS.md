@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 24/11/2026 (soir) : nouveau logo (τ dans un galet pêche, image exacte) intégré, `tda-v19`._
+_Mis à jour le 24/11/2026 (22 h) : clé de signature Android permanente en place ; nouveau logo intégré (`tda-v19`)._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -44,10 +44,10 @@ _Mis à jour le 24/11/2026 (soir) : nouveau logo (τ dans un galet pêche, image
 3. Plus tard : choisir la plateforme de don.
 
 ## Appli Android : reste à faire
-- **Signature (24/11, 21 h 30)** : deux APK successifs ont été refusés (« package en conflit ») alors que GitHub restaurait bien la clé : l'outil de fabrication ne signait sans doute pas avec elle. Désormais `android.yml` signe lui-même l'APK (`apksigner`) avec la clé du cache et affiche son empreinte dans le journal : **SHA-256 `73b12cf5…2e98ea`**. Si une fabrication affiche une autre empreinte, la clé a changé. Une dernière réinstallation a été nécessaire ; vérifier à la prochaine version que la mise à jour s'installe par-dessus.
+- **Signature (24/11, 21 h 30)** : deux APK successifs ont été refusés (« package en conflit ») alors que GitHub restaurait bien la clé : l'outil de fabrication ne signait sans doute pas avec elle. Désormais `android.yml` signe lui-même l'APK (`apksigner`) avec la clé du cache et affiche son empreinte dans le journal : **SHA-256 `73b12cf5…2e98ea`**. Si une fabrication affiche une autre empreinte, la clé a changé. Une dernière réinstallation a été nécessaire. **À vérifier : la prochaine version (1.12 ou plus) doit s'installer par-dessus sans désinstaller.**
 - Vérifier la nouvelle icône sur le Xiaomi après réinstallation de l'APK (rognage rond / arrondi correct).
 - APK installé sur le Xiaomi ✅ ; reste à vérifier les rappels réels appli fermée sur 2 à 3 jours (tâche simple, médicament quotidien).
-- **Clé de signature permanente en place (24/11, 21 h 50)** : secret GitHub `ANDROID_KEYSTORE_BASE64` = la clé déjà utilisée (empreinte `73b12cf5…2e98ea`, aucune réinstallation). Vérifié : fabrication 1.12 signée avec la clé permanente. Fichier `tda-android.keystore` gardé par le porteur du projet, hors GitHub. La garde hebdomadaire du cache (`garder-cle.yml`) est supprimée.
+- **Clé de signature permanente en place (24/11, 21 h 50)** : secret GitHub `ANDROID_KEYSTORE_BASE64` = la clé déjà utilisée (empreinte `73b12cf5…2e98ea`, aucune réinstallation). Vérifié : fabrication 1.12 signée avec la clé permanente. Le fichier `tda-android.keystore` est rangé en lieu sûr par le porteur du projet, hors GitHub et hors du dossier du projet ; les fichiers intermédiaires (base64, zip chiffré) sont supprimés. La garde hebdomadaire du cache (`garder-cle.yml`) est supprimée. Recréer le secret à partir du fichier : voir DEPLOIEMENT.md.
 - Mises à jour : pas de bandeau « nouvelle version » (décision du 24/11) ; pendant les tests, il retélécharge l'APK lui-même et prévient les testeurs ; mise à jour automatique une fois sur le Play Store.
 - iPhone : nécessite un Mac (Xcode) ; en attendant, la version web avec le push reste l'option iPhone.
 
