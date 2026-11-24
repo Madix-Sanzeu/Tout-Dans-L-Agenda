@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 24/11/2026 (22 h) : clé de signature Android permanente en place ; nouveau logo intégré (`tda-v19`)._
+_Mis à jour le 24/11/2026 (22 h 15) : interface aux couleurs du logo (`tda-v20`) ; clé de signature Android permanente en place ; nouveau logo intégré (`tda-v19`)._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -32,11 +32,12 @@ _Mis à jour le 24/11/2026 (22 h) : clé de signature Android permanente en plac
 - **Diagnostic (24/11, Xiaomi + Chrome)** : le site est « géré par l'application » TDA (permission déléguée à l'appli installée). Android autorise les notifications pour TDA et pour Chrome, mais à chaque ouverture la page voit la permission « non accordée ». Chrome annule alors l'abonnement push, Google répond 410 au serveur, l'appareil est effacé. Défaut Chrome / appli web installée, pas de l'appli ni du serveur. Test de notification : OK une fois (12:54–12:55), puis adresse annulée à 12:57.
 - **Garde-fou (`tda-v13`)** : bandeau rouge « ⚠️ Vos rappels sont coupés » sur l'écran principal dès que la permission a sauté, bouton « Réactiver les rappels » (permission + réabonnement en un toucher). Le bouton « Activer les notifications » de ⚙️ fait la même chose. Testé dans Chrome (3 cas : OK, coupé puis réactivé, coupé puis refusé).
 - **Appli Android (24/11, `tda-v14`)** : Capacitor + notifications locales programmées par Android (`js/natif.js`), sans serveur ni Internet. Sauvegarde par le menu Partager d'Android. APK fabriqué par GitHub Actions (`.github/workflows/android.yml`) et publié à https://github.com/Madix-Sanzeu/Tout-Dans-L-Agenda/releases/download/apk/TDA.apk. Identifiant `io.github.madixsanzeu.tda`, nom sous l'icône « TDA ». Nom de l'appli centralisé dans `TDA.config.NOM` (changement de nom prévu, voir la recette dans GUIDE.md). Testé dans Chrome en simulant l'appli Android (rappels programmés, garde-fou, test, réglage minute près, sauvegarde) ; **testé sur le Xiaomi le 24/11 : notification de test reçue appli fermée, et l'APK a passé les analyses de sécurité du téléphone (Play Protect)**.
-- **Logo (24/11 soir, `tda-v19`)** : la lettre grecque τ (tau, « T » de Tâches) dans un galet pêche, dans l'esprit de Psy'Havior (ψ) et Learn'Havior (λ). C'est **l'image exacte fournie par Max** (`logo/logo-tda-original.png`), seulement détourée (`logo/logo-tda.png`) : pas de redessin, pour garder tous les détails (un premier redessin en SVG, `tda-v15`, n'était pas assez fidèle). Remplace `icone.svg` (image glissée dedans), `icone-192.png`, `icone-512.png` et l'icône Android : images toutes prêtes dans `android-ressources/icones/` (5 tailles, fond blanc, galet jamais coupé même par un masque rond), copiées par `android.yml` ; l'outil `@capacitor/assets` est abandonné (il rétrécissait le logo, puis ne fabriquait plus rien sans `icon-only.png`). Les couleurs de l'interface (bleu `#1f3a5f`) n'ont pas changé. Recette « Changer le logo » dans GUIDE.md.
+- **Logo (24/11 soir, `tda-v19`)** : la lettre grecque τ (tau, « T » de Tâches) dans un galet pêche, dans l'esprit de Psy'Havior (ψ) et Learn'Havior (λ). C'est **l'image exacte fournie par Max** (`logo/logo-tda-original.png`), seulement détourée (`logo/logo-tda.png`) : pas de redessin, pour garder tous les détails (un premier redessin en SVG, `tda-v15`, n'était pas assez fidèle). Remplace `icone.svg` (image glissée dedans), `icone-192.png`, `icone-512.png` et l'icône Android : images toutes prêtes dans `android-ressources/icones/` (5 tailles, fond blanc, galet jamais coupé même par un masque rond), copiées par `android.yml` ; l'outil `@capacitor/assets` est abandonné (il rétrécissait le logo, puis ne fabriquait plus rien sans `icon-only.png`). Recette « Changer le logo » dans GUIDE.md.
+- **Couleurs de l'interface (24/11, `tda-v20`)** : palette « pêche » du logo dans `css/style.css` (fond `#fdf6f2`, principal `#a24d24`, principal clair `#fde4d6`, texte `#2e1a12` ; mode sombre : principal `#f0a07c`). Barre du téléphone (`theme-color`, manifest) en `#fdf6f2`, couleur des notifications Android `#b55b2f`. Contrastes vérifiés (≥ 4,5 pour 1). Couleurs des priorités et des moments inchangées. **À confirmer par Learnhavior.**
 - Tests dans un navigateur : appli, réglages et pages OK, aucune erreur ; fonctions serveur vérifiées pour la syntaxe uniquement (pas d'environnement Deno ici).
 
 ## Reste à faire pour finir la phase 2
-0. Tester la nouvelle confirmation de « Restaurer » sur Android, puis « Sauvegarder » / « Restaurer » sur iPhone.
+0. ~~Confirmation de « Restaurer » sur Android~~ ✅ validée le 24/11 ; reste « Sauvegarder » / « Restaurer » sur iPhone.
 1. Tester un vrai rappel appli fermée **sur iPhone** (Android OK). En cas de souci : Supabase → Edge Functions → `tda-envoi` → Logs.
 0 bis. Sur Xiaomi (MIUI) : Chrome en démarrage automatique, batterie « Aucune restriction », notifications autorisées pour Chrome et TDA ; vérifier avec le bouton de test, appli fermée.
 1 bis. Tester une tâche récurrente sur téléphone (ex. rappel quotidien) pendant 2–3 jours, appli fermée.
@@ -58,7 +59,7 @@ Le push web dépend du bon accord entre Chrome et le système, et ce n'est pas l
 
 ## À valider avec Learnhavior (3 psychologues, dont Sandra)
 _Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artifact/NfwuV8XGJ5onk4R1PxPnoB_
-- Le logo (τ dans un galet pêche, dans le style Psy'Havior / Learn'Havior) : leur accord pour reprendre ce code visuel ; faut-il aussi passer les couleurs de l'appli (bleu) aux tons pêche ?
+- Le logo (τ dans un galet pêche, dans le style Psy'Havior / Learn'Havior) : leur accord pour reprendre ce code visuel ; couleurs de l'interface passées aux tons pêche (`tda-v20`) : à confirmer.
 - Le rappel de sauvegarde : fréquence (14 jours) et formulation, pour ne pas culpabiliser.
 - Phase 3 — récupération d'un compte chiffré (mot de passe ET e-mail perdus) : quels moyens proposer, sachant que ce public perd facilement les codes ? Code de récupération à l'inscription, clé dans le fichier de sauvegarde, autre appareil connecté, contact de confiance (proche, aidant), ou plusieurs cumulés.
 - Phase 3 — comment expliquer simplement que, sans aucun de ces moyens, les tâches sont perdues (prix d'une confidentialité réelle) ?

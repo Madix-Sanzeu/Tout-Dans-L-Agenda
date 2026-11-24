@@ -14,16 +14,18 @@
    ===================================================================== */
 
 :root {
-  --fond: #f5f3ee;
+  /* Palette « pêche » du logo (τ dans son galet), dans l'esprit de Psy'Havior / Learn'Havior.
+     Contrastes vérifiés : au moins 4,5 pour 1 entre chaque texte et son fond (lisibilité). */
+  --fond: #fdf6f2;            /* blanc chaud, très légèrement pêche */
   --carte: #ffffff;
-  --texte: #1d2433;
-  --texte-doux: #5c6577;
-  --bordure: #e3e0d8;
-  --principal: #1f3a5f;
-  --principal-clair: #e6edf6;
+  --texte: #2e1a12;           /* brun très foncé (comme le contour du τ) */
+  --texte-doux: #6e5a50;
+  --bordure: #f0dfd5;
+  --principal: #a24d24;       /* brun-orangé (proche du contour du galet) */
+  --principal-clair: #fde4d6; /* pêche clair (comme l'intérieur du galet) */
   --succes: #2b8a3e;
   --danger: #c92a2a;
-  --ombre: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(31,58,95,.07);
+  --ombre: 0 1px 2px rgba(101,38,10,.05), 0 4px 16px rgba(101,38,10,.07);
   --rayon: 16px;
   font-size: 17px;
 }
@@ -31,13 +33,13 @@
 /* Mode sombre automatique si le téléphone est réglé en sombre */
 @media (prefers-color-scheme: dark) {
   :root {
-    --fond: #12161f;
-    --carte: #1b2130;
-    --texte: #e9ecf2;
-    --texte-doux: #a3acbd;
-    --bordure: #2c3446;
-    --principal: #8fb4e8;
-    --principal-clair: #22304a;
+    --fond: #1c1512;
+    --carte: #271d18;
+    --texte: #f6ece6;
+    --texte-doux: #c4b2a8;
+    --bordure: #3d2e27;
+    --principal: #f0a07c;     /* pêche (comme l'intérieur du τ) */
+    --principal-clair: #3d2a20;
     --ombre: none;
   }
 }
