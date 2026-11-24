@@ -1,9 +1,10 @@
 // =====================================================================
 // Fonction serveur "tda-rappels" — appelée PAR L'APPLI
 // ---------------------------------------------------------------------
-// Trois actions possibles, envoyées en JSON :
+// Quatre actions possibles, envoyées en JSON :
 //   { action: 'abonner',      appareilId, secret, abonnement }
 //   { action: 'synchroniser', appareilId, secret, rappels: [{ tacheId, quand, titre }] }
+//   { action: 'tester',       appareilId, secret }   → notification de test dans la minute
 //   { action: 'supprimer',    appareilId, secret }
 //
 // Pas de compte utilisateur : un appareil est reconnu par son identifiant
@@ -84,6 +85,19 @@ Deno.serve(async (req) => {
     }
     await base.from('appareils').update({ vu_le: new Date().toISOString() }).eq('id', d.appareilId);
     return repondre(200, { ok: true, rappels: lignes.length });
+  }
+
+  // ---------- TESTER : une notification de test, envoyée dans la minute ----------
+  if (d.action === 'tester') {
+    await base.from('rappels').delete().eq('appareil_id', d.appareilId).like('tache_id', 'test-%');
+    const { error } = await base.from('rappels').insert({
+      appareil_id: d.appareilId,
+      tache_id: 'test-' + Date.now(),
+      quand: new Date().toISOString(),
+      titre: 'Test : les rappels fonctionnent 🎉',
+    });
+    if (error) return repondre(500, { erreur: 'Test impossible' });
+    return repondre(200, { ok: true });
   }
 
   // ---------- SUPPRIMER : efface l'appareil et tous ses rappels ----------

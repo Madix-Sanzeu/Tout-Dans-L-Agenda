@@ -53,6 +53,9 @@ Deno.serve(async (req) => {
     } catch (e: any) {
       // 4. Abonnement expiré ou supprimé par le téléphone
       if (e?.statusCode === 404 || e?.statusCode === 410) {
+        // On le note dans le journal (Supabase → Edge Functions → Logs) :
+        // l'appli se réabonnera toute seule à sa prochaine ouverture.
+        console.warn('Abonnement expiré (' + e.statusCode + '), appareil effacé :', String(r.appareil_id).slice(0, 8));
         await base.from('appareils').delete().eq('id', r.appareil_id);
       } else {
         console.error('Échec envoi', e?.statusCode, e?.body);

@@ -15,6 +15,11 @@
       même si l'appli est fermée.
 
    Désactiver = tout ce qui concerne cet appareil est effacé du serveur.
+
+   RÉPARATION AUTOMATIQUE : l'adresse de notification d'un téléphone peut
+   expirer (Google/Apple la renouvellent, économies de batterie…). Le
+   serveur efface alors l'appareil. L'appli s'en rend compte (au démarrage
+   ou à la synchro, erreur 403) et se réenregistre toute seule.
    ===================================================================== */
 
 window.TDA = window.TDA || {};
@@ -60,6 +65,8 @@ TDA.push = (function () {
   }
 
   // Envoie une demande à la fonction serveur "tda-rappels".
+  // En cas d'échec, l'erreur porte le code du serveur (erreur.statut),
+  // ex. 403 = « appareil inconnu » : le serveur a oublié cet appareil.
   async function appelerServeur(action, donnees = {}) {
     const etat = lireEtat();
     const reponse = await fetch(C().URL_SUPABASE + '/functions/v1/tda-rappels', {
@@ -70,8 +77,20 @@ TDA.push = (function () {
       },
       body: JSON.stringify({ action, appareilId: etat.appareilId, secret: etat.secret, ...donnees })
     });
-    if (!reponse.ok) throw new Error('Serveur : ' + reponse.status + ' ' + await reponse.text());
+    if (!reponse.ok) {
+      const erreur = new Error('Serveur : ' + reponse.status + ' ' + await reponse.text());
+      erreur.statut = reponse.status;
+      throw erreur;
+    }
     return reponse.json();
+  }
+
+  // Note le résultat de la dernière synchronisation (affiché dans ⚙️).
+  function noterSynchro(ok, message) {
+    const etat = lireEtat();
+    if (!etat) return;
+    etat.derniereSynchro = { quand: new Date().toISOString(), ok, message: message || '' };
+    ecrireEtat(etat);
   }
 
   // Ne garde que ce que le serveur a besoin de savoir : les rappels À VENIR.
@@ -97,6 +116,27 @@ TDA.push = (function () {
     return liste.slice(0, 500); // le serveur n'en accepte pas plus
   }
 
+  // L'abonnement push du téléphone (en crée un s'il n'existe plus).
+  async function obtenirAbonnement() {
+    const sw = await navigator.serviceWorker.ready;
+    const existant = await sw.pushManager.getSubscription();
+    if (existant) return existant;
+    return sw.pushManager.subscribe({
+      userVisibleOnly: true,                                   // obligatoire : chaque push affiche une notification
+      applicationServerKey: cleEnOctets(C().CLE_PUBLIQUE_VAPID)
+    });
+  }
+
+  // (Ré)enregistre cet appareil sur le serveur, avec un nouvel identifiant
+  // et un nouveau secret, puis envoie les rappels.
+  async function enregistrer(taches, masquerTitres) {
+    const abonnement = await obtenirAbonnement();
+    ecrireEtat({ appareilId: nouvelUuid(), secret: aleatoire(32), masquerTitres: Boolean(masquerTitres),
+                 adresse: abonnement.endpoint });
+    await appelerServeur('abonner', { abonnement: abonnement.toJSON() });
+    await envoyerRappels(taches);
+  }
+
   // 1. ACTIVER (appelé par le bouton dans les réglages)
   async function activer(taches, masquerTitres) {
     if (!serveurConfigure()) throw new Error('Le serveur de notifications n\'est pas encore configuré.');
@@ -105,19 +145,10 @@ TDA.push = (function () {
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') throw new Error('Notifications refusées : autorisez-les dans les réglages du téléphone.');
 
-    const sw = await navigator.serviceWorker.ready;
-    const abonnement = await sw.pushManager.subscribe({
-      userVisibleOnly: true,                                   // obligatoire : chaque push affiche une notification
-      applicationServerKey: cleEnOctets(C().CLE_PUBLIQUE_VAPID)
-    });
-
-    ecrireEtat({ appareilId: nouvelUuid(), secret: aleatoire(32), masquerTitres: Boolean(masquerTitres) });
     try {
-      await appelerServeur('abonner', { abonnement: abonnement.toJSON() });
-      await synchroniserMaintenant(taches);
+      await enregistrer(taches, masquerTitres);
     } catch (e) {
       ecrireEtat(null);                                         // échec : on revient à l'état "inactif"
-      await abonnement.unsubscribe().catch(() => {});
       throw e;
     }
   }
@@ -129,10 +160,72 @@ TDA.push = (function () {
     minuteur = setTimeout(() => synchroniserMaintenant(taches).catch(e => console.warn('Synchro push :', e)), 2000);
   }
 
+  // Envoie la liste des rappels à venir (sans réparation).
+  async function envoyerRappels(taches) {
+    const etat = lireEtat();
+    if (!etat) return;
+    const resultat = await appelerServeur('synchroniser', { rappels: rappelsAVenir(taches, etat.masquerTitres) });
+    noterSynchro(true, pluriel(resultat.rappels || 0, 'rappel') + ' programmé' + ((resultat.rappels || 0) > 1 ? 's' : ''));
+    return resultat;
+  }
+
+  // Synchronise, et RÉPARE si besoin : si le serveur a oublié cet appareil
+  // (erreur 403, ex. adresse de notification expirée côté Google/Apple),
+  // on se réenregistre tout seul et on renvoie les rappels.
   async function synchroniserMaintenant(taches) {
     const etat = lireEtat();
     if (!etat) return;
-    await appelerServeur('synchroniser', { rappels: rappelsAVenir(taches, etat.masquerTitres) });
+    try {
+      return await envoyerRappels(taches);
+    } catch (e) {
+      if (e.statut === 403) {
+        try {
+          await enregistrer(taches, etat.masquerTitres);
+          noterSynchro(true, 'Réabonné automatiquement');
+          return;
+        } catch (e2) {
+          noterSynchro(false, 'Réabonnement impossible : ' + e2.message);
+          throw e2;
+        }
+      }
+      noterSynchro(false, navigator.onLine === false ? 'Pas de connexion Internet' : e.message);
+      throw e;
+    }
+  }
+
+  // Au démarrage : l'adresse de notification du téléphone a-t-elle changé
+  // (ou disparu) depuis l'activation ? Si oui, on se réenregistre.
+  async function verifier(taches) {
+    const etat = lireEtat();
+    if (!etat || !serveurConfigure() || !compatible()) return;
+    if (Notification.permission !== 'granted') {
+      noterSynchro(false, 'Notifications bloquées dans les réglages du téléphone');
+      return;
+    }
+    try {
+      const sw = await navigator.serviceWorker.ready;
+      const abonnement = await sw.pushManager.getSubscription();
+      if (!abonnement || abonnement.endpoint !== etat.adresse) {
+        await enregistrer(taches, etat.masquerTitres);
+        noterSynchro(true, 'Adresse de notification renouvelée');
+      } else {
+        await synchroniserMaintenant(taches);
+      }
+    } catch (e) {
+      console.warn('Vérification push :', e);
+    }
+  }
+
+  // Demande au serveur d'envoyer TOUT DE SUITE une notification de test
+  // (elle arrive en moins d'une minute, même appli fermée).
+  async function tester(taches) {
+    await synchroniserMaintenant(taches);                       // répare d'abord si besoin
+    await appelerServeur('tester');
+  }
+
+  // Petit outil : « 3 rappels », « 1 rappel »
+  function pluriel(n, mot) {
+    return n + ' ' + mot + (n > 1 ? 's' : '');
   }
 
   // Changer l'option "masquer les titres" sans tout réactiver.
@@ -156,5 +249,5 @@ TDA.push = (function () {
     ecrireEtat(null);
   }
 
-  return { serveurConfigure, compatible, estActif, lireEtat, activer, planifierSynchro, changerMasquage, desactiver };
+  return { serveurConfigure, compatible, estActif, lireEtat, activer, planifierSynchro, changerMasquage, desactiver, verifier, tester };
 })();

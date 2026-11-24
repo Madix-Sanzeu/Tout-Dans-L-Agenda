@@ -956,7 +956,29 @@ TDA.app = (function () {
     $('etat-push').textContent = message;
     $('zone-activer-push').hidden = actif || !TDA.push.serveurConfigure() || !TDA.push.compatible();
     $('zone-desactiver-push').hidden = !actif;
-    if (actif) $('push-masquer-titres-actif').checked = Boolean(TDA.push.lireEtat().masquerTitres);
+    if (actif) {
+      const etatPush = TDA.push.lireEtat();
+      $('push-masquer-titres-actif').checked = Boolean(etatPush.masquerTitres);
+      // La dernière synchronisation : OK (✅) ou le problème rencontré (⚠️)
+      const s = etatPush.derniereSynchro;
+      $('etat-synchro-push').textContent = s
+        ? `${s.ok ? '✅' : '⚠️'} Dernière synchronisation : ${dateLisible(s.quand)}${s.message ? ' — ' + s.message : ''}`
+        : 'Pas encore synchronisé.';
+    }
+  }
+
+  // "Envoyer une notification de test" : le serveur l'envoie dans la minute.
+  async function testerPush() {
+    const bouton = $('bouton-tester-push');
+    bouton.disabled = true;
+    try {
+      await TDA.push.tester(etat.taches);
+      afficherBandeau('Notification de test demandée : elle arrive dans moins d\'une minute. Vous pouvez fermer l\'appli.');
+    } catch (e) {
+      afficherBandeau('Test impossible : ' + e.message);
+    }
+    bouton.disabled = false;
+    afficherEtatPush();
   }
 
   async function activerPush() {
@@ -1178,13 +1200,18 @@ TDA.app = (function () {
     });
     $('bouton-activer-push').addEventListener('click', activerPush);
     $('bouton-desactiver-push').addEventListener('click', desactiverPush);
+    $('bouton-tester-push').addEventListener('click', testerPush);
     $('push-masquer-titres-actif').addEventListener('change', e =>
       TDA.push.changerMasquage(etat.taches, e.target.checked).catch(err => afficherBandeau(err.message)));
     $('bouton-exporter').addEventListener('click', exporter);
     $('champ-importer').addEventListener('change', importer);
 
     // Quand on revient sur l'appli (onglet ou téléphone rallumé) : on rafraîchit.
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) tic(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) return;
+      tic();
+      TDA.push.verifier(etat.taches); // retour dans l'appli : on revérifie l'abonnement push
+    });
   }
 
   // Exécuté régulièrement : rappels + changement de moment de vie.
@@ -1219,7 +1246,9 @@ TDA.app = (function () {
     if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('controllerchange', afficherVersion);
 
     $('lien-avis').href = TDA.config.LIEN_AVIS;
-    TDA.push.planifierSynchro(etat.taches); // au démarrage : rattrape les changements faits hors ligne
+    // Au démarrage : vérifie l'abonnement push (et le répare si besoin),
+    // puis envoie les rappels à jour au serveur.
+    TDA.push.verifier(etat.taches);
 
     if (TDA.config.LIEN_DON) {
       $('lien-don').href = TDA.config.LIEN_DON;

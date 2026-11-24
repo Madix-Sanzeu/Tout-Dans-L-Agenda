@@ -1,6 +1,6 @@
 # Relais — où en est TDA
 
-_Mis à jour le 24/11/2026 : assistant « Rappel récurrent » (7 modèles) ; push testé sur Android._
+_Mis à jour le 24/11/2026 : réparation automatique des rappels push + bouton de test (`tda-v12`)._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -28,11 +28,13 @@ _Mis à jour le 24/11/2026 : assistant « Rappel récurrent » (7 modèles) ; pu
 - **Tâches récurrentes** (24/11) : tous les jours / semaines (jours au choix) / mois / ans, ou tous les N. « C'est fait » archive une copie et passe à la date suivante (annulable) ; zone « Récurrentes à venir » ; rattrapage des oublis ; dates suivantes envoyées à l'avance au serveur push (14 dates max sur 31 jours). Nouveau fichier `js/recurrence.js`, `sw.js` en `tda-v8`. Testé : calculs de dates (changement d'heure, 31 du mois, 29 février, toutes les 2 semaines), parcours complet dans Chrome, liste envoyée au serveur.
 - **Assistant « 🔁 Rappel récurrent »** (24/11, `js/modeles.js`, `sw.js` en `tda-v9`) : 7 modèles. 🎂 Anniversaire (rappel cadeau X jours avant ; âge affiché dans le titre si l'année est connue, mis à jour chaque année — `tda-v10`), 💊 Médicament (1 à 6 prises par jour, tous les jours / certains jours / tous les N jours, pas d'arrêt / N jours / jusqu'au…), 🧾 Facture ou paiement, 📄 Renouvellement, 📅 Chaque semaine, 🌱 Tous les N jours, ✏️ Personnalisé. Séries supprimables d'un coup ; date de fin dans le moteur ; personnalisation via ✎ (« Répéter » + « jusqu'au »). Le champ « Répéter » n'apparaît plus à la création d'une tâche simple. Testé dans Chrome : les 7 modèles, prises programmées, suppression de série, aucune erreur.
 - Mise à jour des téléphones fiabilisée (24/11, `tda-v11`) : `sw.js` vérifie chaque fichier auprès du serveur (`cache: 'no-cache'`) au lieu de se fier à la mémoire de 10 min de GitHub Pages, qui pouvait mélanger une page neuve et d'anciens scripts. Numéro de version affiché en bas de l'appli. **Vérifié sur téléphone le 24/11** : mise à jour reçue, assistant « Rappel récurrent » et âge des anniversaires OK.
+- **Incident du 24/11 : plus de rappels appli fermée.** Dans la nuit, le serveur a effacé l'abonnement du téléphone (adresse de notification refusée par Google, probablement notifications coupées ou économies de batterie MIUI). L'appli ne s'en apercevait pas et le serveur refusait ses synchronisations (403). Corrigé (`tda-v12`) : réparation automatique (réabonnement au démarrage, au retour dans l'appli, sur erreur 403 ou changement d'adresse), état de la dernière synchronisation dans ⚙️, bouton « Envoyer une notification de test » (action serveur `tester`), journal côté serveur quand un abonnement expire. Fonctions `tda-rappels` et `tda-envoi` redéployées. Testé dans Chrome avec un faux serveur ; à vérifier sur le téléphone.
 - Tests dans un navigateur : appli, réglages et pages OK, aucune erreur ; fonctions serveur vérifiées pour la syntaxe uniquement (pas d'environnement Deno ici).
 
 ## Reste à faire pour finir la phase 2
 0. Tester la nouvelle confirmation de « Restaurer » sur Android, puis « Sauvegarder » / « Restaurer » sur iPhone.
 1. Tester un vrai rappel appli fermée **sur iPhone** (Android OK). En cas de souci : Supabase → Edge Functions → `tda-envoi` → Logs.
+0 bis. Sur Xiaomi (MIUI) : Chrome en démarrage automatique, batterie « Aucune restriction », notifications autorisées pour Chrome et TDA ; vérifier avec le bouton de test, appli fermée.
 1 bis. Tester une tâche récurrente sur téléphone (ex. rappel quotidien) pendant 2–3 jours, appli fermée.
 2. Relire `confidentialite.html` et `mentions-legales.html`, et choisir un contact plus simple que GitHub pour les testeurs (email, formulaire).
 3. Plus tard : choisir la plateforme de don.

@@ -156,7 +156,11 @@ Il y a deux mécanismes complémentaires.
 3. **Envoyer.** Chaque minute, la base de données réveille la fonction `tda-envoi`, qui envoie les notifications arrivées à l'heure puis les efface.
 4. **Recevoir.** `sw.js` reçoit l'événement `push` et affiche la notification, même appli fermée.
 
-Désactiver l'option efface tout ce qui concerne l'appareil sur le serveur. Sur iPhone, le push ne fonctionne que si l'appli a été ajoutée à l'écran d'accueil. Les détails de mise en ligne sont dans `DEPLOIEMENT.md`.
+Désactiver l'option efface tout ce qui concerne l'appareil sur le serveur.
+
+**Réparation automatique.** L'adresse de notification d'un téléphone peut expirer : Google ou Apple la renouvellent, des économies de batterie la coupent, les notifications sont désactivées… Le serveur efface alors l'appareil (le journal `tda-envoi` le note). L'appli s'en rend compte toute seule, au démarrage, au retour dans l'appli ou quand le serveur répond « appareil inconnu » (erreur 403) : elle se réenregistre et renvoie ses rappels (`verifier()` et `synchroniserMaintenant()` dans `push.js`).
+
+**Vérifier que ça marche.** Dans ⚙️, la ligne « Dernière synchronisation » indique si tout va bien. Le bouton « 🔔 Envoyer une notification de test » demande au serveur une notification immédiate : elle arrive en moins d'une minute, même appli fermée. Sur iPhone, le push ne fonctionne que si l'appli a été ajoutée à l'écran d'accueil. Les détails de mise en ligne sont dans `DEPLOIEMENT.md`.
 
 Si l'appli est ouverte, la même tâche peut déclencher les deux notifications. Elles portent la même étiquette (`tag`), donc la seconde remplace la première au lieu de s'empiler.
 

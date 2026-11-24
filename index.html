@@ -230,6 +230,10 @@
           <button type="button" id="bouton-activer-push" class="bouton-principal">J'accepte et j'active</button>
         </div>
         <div id="zone-desactiver-push" hidden>
+          <!-- État de la dernière synchronisation avec le serveur (rempli par app.js) -->
+          <p id="etat-synchro-push" class="info"></p>
+          <button type="button" id="bouton-tester-push" class="bouton-secondaire">🔔 Envoyer une notification de test</button>
+          <p class="aide">Elle arrive en moins d'une minute : vous pouvez fermer l'appli pour vérifier que les rappels arrivent bien appli fermée.</p>
           <label class="interrupteur"><input type="checkbox" id="push-masquer-titres-actif"> <span>Masquer les titres</span></label>
           <button type="button" id="bouton-desactiver-push" class="bouton-danger">Désactiver et effacer mes données du serveur</button>
         </div>
