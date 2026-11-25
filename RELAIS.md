@@ -99,8 +99,8 @@ _Voir aussi `IDEES-AUTRES-APPLIS.md` (projet Claude) : capture express / boîte 
 - Si retenue : choisir l'univers avec Learnhavior ; plan en 5 points.
 
 ### Idée possible n° 3 — Nom et adresse de l'appli (24/11)
-- **Nom envisagé (pas définitif)** : « TDA(H) - Tout Dans l'Appli (Hyperfocus !) ». Pistes écartées pour l'instant : « Tout Dans l'Agenda » (« agenda » fait penser à un calendrier), « (Hyperattention !) » (peut sonner comme l'injonction « Fais attention ! »). **Avis des psychologues à demander.** Le nom est centralisé dans `TDA.config.NOM`.
-- **Nom court sous l'icône** (≈ 12 caractères visibles) : « TDA(H) » par défaut.
+- **Noms envisagés (25/11, pas définitifs)** : « Tout Dans l'App'Havior » ou « Tout Dans l'Agend'Havior », dans la famille Psy'Havior / Learn'Havior ; les initiales forment « TDAH ». **Accord de Learnhavior nécessaire** (c'est leur marque) ; vérifier que le nom est libre (stores, INPI) avant de l'adopter. Ancienne piste : « TDA(H) - Tout Dans l'Appli (Hyperfocus !) ». Pistes écartées pour l'instant : « Tout Dans l'Agenda » (« agenda » fait penser à un calendrier), « (Hyperattention !) » (peut sonner comme l'injonction « Fais attention ! »). **Avis des psychologues à demander.** Le nom est centralisé dans `TDA.config.NOM`.
+- **Nom court sous l'icône** (≈ 12 caractères visibles) : **« TDAH »** (décision de Max, 25/11).
 - **Version discrète au choix** (nom court « Hyperfocus ! », sans TDA(H)) : sur iPhone, la personne peut déjà renommer l'icône au moment de l'ajout ; pour Android web, un 2ᵉ manifeste (`manifest-discret.json`, `id` différent) choisi avant l'installation ; impossible dans les stores (un seul nom). À vérifier sur un vrai téléphone.
 - **Ne pas renommer le dépôt GitHub** : GitHub ne redirige pas l'adresse GitHub Pages après un renommage (applis installées et abonnements cassés). Solution recommandée par GitHub : **un nom de domaine à soi** (≈ 10 €/an), neutre (indépendant du nom final), pris avant d'élargir les tests et avant la phase 4. Ce déménagement unique demandera Exporter/Importer (surtout iPhone) et la réactivation des rappels.
 
@@ -124,7 +124,7 @@ _Envoi prévu le 25/11 : mail avec les questions + `learnhavior/TDA-questions-Le
 - Imposer le découpage en étapes au-delà d'une certaine durée ?
 - Idée voix : la dictée et la lecture à voix haute sont-elles prioritaires pour leur public ? Lecture seulement à la demande (bouton 🔊), ou aussi automatique (ex. à l'arrivée d'un rappel, appli ouverte) ?
 - Idée jeu : quel univers (chez-soi, jardin, compagnon, voyage, collection) ? Risque d'infantiliser ou de culpabiliser ? Récompenser davantage le fait de démarrer une tâche que de la finir ?
-- Idée nom : « Tout Dans l'Appli (Hyperfocus !) » leur convient-il ? Le sigle « TDA(H) » sous l'icône pose-t-il un problème de discrétion ?
+- Idée nom : « Tout Dans l'App'Havior » ou « Tout Dans l'Agend'Havior » (nom court « TDAH ») ? Accord pour reprendre « Havior » ? Le sigle « TDAH » sous l'icône pose-t-il un problème de discrétion ?
 - Test iPhone : qui a un iPhone parmi elles, et l'identifiant Apple (e-mail) de chacune pour l'invitation TestFlight.
 
 ## Phases suivantes
