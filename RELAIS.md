@@ -1,7 +1,7 @@
 # Relais — où en est TDA
 
 _Mis à jour le 24/11/2026 (22 h 30) : mise à jour de l'APK par-dessus validée ; piste iPhone sans Mac (TestFlight, Sideloadly en note) ; interface aux couleurs du logo (`tda-v20`) ; clé de signature Android permanente en place ; nouveau logo intégré (`tda-v19`)._
-_Ajouts du 25/11 : section « 💡 Idées possibles » (voix, jeu, nom et adresse de l'appli) — rien n'y est décidé. Mail, questionnaire Excel (22 questions) et présentation PDF (6 pages) prêts pour Learnhavior (25/11, 13 h)._
+_Ajouts du 25/11 : section « 💡 Idées possibles » (voix, jeu, nom et adresse de l'appli) — rien n'y est décidé. Mail, questionnaire Excel (23 questions) et présentation PDF (6 pages) prêts pour Learnhavior (25/11, 13 h)._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -104,8 +104,16 @@ _Voir aussi `IDEES-AUTRES-APPLIS.md` (projet Claude) : capture express / boîte 
 - **Version discrète au choix** (nom court « Hyperfocus ! », sans TDA(H)) : sur iPhone, la personne peut déjà renommer l'icône au moment de l'ajout ; pour Android web, un 2ᵉ manifeste (`manifest-discret.json`, `id` différent) choisi avant l'installation ; impossible dans les stores (un seul nom). À vérifier sur un vrai téléphone.
 - **Ne pas renommer le dépôt GitHub** : GitHub ne redirige pas l'adresse GitHub Pages après un renommage (applis installées et abonnements cassés). Solution recommandée par GitHub : **un nom de domaine à soi** (≈ 10 €/an), neutre (indépendant du nom final), pris avant d'élargir les tests et avant la phase 4. Ce déménagement unique demandera Exporter/Importer (surtout iPhone) et la réactivation des rappels.
 
+### Idée possible n° 4 — Widget d'écran d'accueil (25/11)
+- **Idée de Max** : un widget de 3 cases de large × 2 de haut (redimensionnable) qui affiche le **nom complet** de l'appli (confidentialité : seul « TDAH » est sous l'icône) et la **tâche « Maintenant »** (priorité, échéance, étape suivante) ; toucher le widget ouvre l'appli.
+- **Faisable sur Android** (appli Capacitor seulement, pas la version web) : widget natif (petit fichier Kotlin + mise en page XML, rangés dans `android-ressources/` et copiés par `android.yml`) = première exception à « HTML/CSS/JS nus ». L'appli enregistre la tâche « Maintenant » à chaque `afficher()` (via `js/natif.js`), le widget la relit. Android ne rafraîchit un widget qu'environ toutes les 30 min : à jour après chaque passage dans l'appli et chaque rappel, mais un changement de « moment » peut mettre jusqu'à 30 min à apparaître.
+- **Confidentialité** : réglage « Masquer les titres dans le widget » (« 1 tâche à faire maintenant »), comme l'option des notifications.
+- **iPhone** : possible plus tard (WidgetKit, Swift), une fois l'appli TestFlight en place.
+- Bouton « C'est fait » sur le widget : 2ᵉ temps.
+- **Décision de Max (25/11)** : attendre l'avis de Learnhavior (question 22 du questionnaire). Si retenue : plan en 5 points (enregistrer la tâche, widget 3 × 2, réglage masquer, fabrication APK, test sur le Xiaomi) ; environ une session.
+
 ## À valider avec Learnhavior (3 psychologues, dont Sandra)
-_Envoi prévu le 25/11 : mail avec les questions + `learnhavior/TDA-questions-Learnhavior.xlsx` (22 questions, une colonne par psychologue) + `learnhavior/TDA-presentation-Learnhavior.pdf` (6 pages, captures, fait/testé, idées), dans le dossier local du projet. Remplace l'ancien tableau en ligne (https://claude.ai/artifact/NfwuV8XGJ5onk4R1PxPnoB)._
+_Envoi prévu le 25/11 : mail avec les questions + `learnhavior/TDA-questions-Learnhavior.xlsx` (23 questions, une colonne par psychologue) + `learnhavior/TDA-presentation-Learnhavior.pdf` (6 pages, captures, fait/testé, idées), dans le dossier local du projet. Remplace l'ancien tableau en ligne (https://claude.ai/artifact/NfwuV8XGJ5onk4R1PxPnoB)._
 - Le logo (τ dans un galet pêche, dans le style Psy'Havior / Learn'Havior) : leur accord pour reprendre ce code visuel ; couleurs de l'interface passées aux tons pêche (`tda-v20`) : à confirmer.
 - Le rappel de sauvegarde : fréquence (14 jours) et formulation, pour ne pas culpabiliser.
 - Phase 3 — récupération d'un compte chiffré (mot de passe ET e-mail perdus) : quels moyens proposer, sachant que ce public perd facilement les codes ? Code de récupération à l'inscription, clé dans le fichier de sauvegarde, autre appareil connecté, contact de confiance (proche, aidant), ou plusieurs cumulés.
@@ -125,6 +133,7 @@ _Envoi prévu le 25/11 : mail avec les questions + `learnhavior/TDA-questions-Le
 - Idée voix : la dictée et la lecture à voix haute sont-elles prioritaires pour leur public ? Lecture seulement à la demande (bouton 🔊), ou aussi automatique (ex. à l'arrivée d'un rappel, appli ouverte) ?
 - Idée jeu : quel univers (chez-soi, jardin, compagnon, voyage, collection) ? Risque d'infantiliser ou de culpabiliser ? Récompenser davantage le fait de démarrer une tâche que de la finir ?
 - Idée nom : « Tout Dans l'App'Havior » ou « Tout Dans l'Agend'Havior » (nom court « TDAH ») ? Accord pour reprendre « Havior » ? Le sigle « TDAH » sous l'icône pose-t-il un problème de discrétion ?
+- Idée widget : utile ? Masquer le titre de la tâche par défaut ou au choix ?
 - Test iPhone : qui a un iPhone parmi elles, et l'identifiant Apple (e-mail) de chacune pour l'invitation TestFlight.
 
 ## Phases suivantes
