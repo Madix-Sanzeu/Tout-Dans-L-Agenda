@@ -1,6 +1,7 @@
 # Relais — où en est TDA
 
 _Mis à jour le 24/11/2026 (22 h 30) : mise à jour de l'APK par-dessus validée ; piste iPhone sans Mac (TestFlight, Sideloadly en note) ; interface aux couleurs du logo (`tda-v20`) ; clé de signature Android permanente en place ; nouveau logo intégré (`tda-v19`)._
+_Ajouts du 25/11 : section « 💡 Idées possibles » (voix, jeu, nom et adresse de l'appli) — rien n'y est décidé. Mail, questionnaire Excel (22 questions) et présentation PDF (6 pages) prêts pour Learnhavior (25/11, 13 h)._
 
 ## Décisions prises
 - Format : PWA (site installable), HTML/CSS/JS sans framework.
@@ -65,8 +66,46 @@ Le push web dépend du bon accord entre Chrome et le système, et ce n'est pas l
 1. **« Ajouter à mon agenda »** : exporter les rappels importants (médicaments, anniversaires, factures) vers l'agenda du téléphone (fichier .ics, avec répétition et alarme). C'est le système qui sonne, sans Chrome ni serveur, sur Android comme sur iPhone. Limite : modifier une tâche dans TDA ne met pas à jour l'agenda (sauf à réexporter).
 2. **Appli native (phase 4 avancée)** : Capacitor + Firebase Cloud Messaging et notifications locales planifiées par le système. C'est la solution la plus fiable ; pour iPhone, voir la section « Appli iPhone de test, sans Mac ».
 
+## 💡 Idées possibles (rien de décidé, à discuter avec Learnhavior avant tout code)
+_Voir aussi `IDEES-AUTRES-APPLIS.md` (projet Claude) : capture express / boîte « À trier », relances limitées, re-découper une étape, pièges à éviter._
+
+### Idée possible n° 1 — La voix, pour les personnes qui ont du mal à écrire ou à lire (25/11)
+**Faisable**, en 4 niveaux du plus simple au plus ambitieux (ordre conseillé : 1 → 2 → 3 → 4) :
+1. **Sans code, tout de suite** : le micro du clavier (Gboard, clavier iPhone) dicte dans n'importe quel champ de l'appli ; le téléphone sait lire l'écran (Android : « Sélectionner pour prononcer » ; iPhone : « Énoncer l'écran »). → Simplement l'expliquer dans `aide.html`.
+2. **Lecture à voix haute dans l'appli** (bouton 🔊 sur une tâche, sur la carte « Maintenant », lecture des étapes une à une) : **facile**. Version web : `speechSynthesis` (voix françaises du téléphone, hors ligne, gratuit). Applis Android / iPhone (Capacitor) : extension `@capacitor-community/text-to-speech`.
+3. **Dictée dans l'appli** (bouton 🎤 qui remplit le titre et les étapes) : **moyen**. Version web : marche dans Chrome Android ; sur iPhone, marche dans Safari mais pas dans la version web installée à l'écran d'accueil (sans gravité : l'iPhone passe par l'appli native). Applis Capacitor : la reconnaissance du navigateur n'existe pas dans la vue web → extension `@capacitor-community/speech-recognition`.
+4. **Vraies commandes vocales** (« Ajoute appeler le médecin demain à 10 h ») : **plus long**. Sans IA en ligne (les tâches restent sur l'appareil) : reconnaître quelques tournures courantes (aujourd'hui, demain, lundi, à 10 h, dans 2 h, urgent…), puis ouvrir le formulaire prérempli pour vérification avant d'enregistrer.
+- Confidentialité : sur Android, la reconnaissance peut envoyer la voix aux serveurs de Google (préférer le mode hors ligne quand il est disponible) ; sur iPhone, reconnaissance possible sur l'appareil. À indiquer dans `confidentialite.html`.
+- Limite : une notification ne se lit pas toute seule à voix haute appli fermée ; seul l'assistant du téléphone peut lire les notifications.
+- Si retenue : plan en 5 points ; nouveau fichier `js/voix.js` (une responsabilité), réglages dans `js/config.js`. Conseil : niveaux 1 et 2 d'abord (peu d'effort, vrai gain).
+
+### Idée possible n° 2 — Rendre les tâches ludiques : jeu et récompenses (25/11)
+**Idée de Max** : chaque tâche accomplie rapporte des points qui servent à **construire son chez-soi** (pièces, meubles, déco à débloquer). Avantage : ça s'enrichit sans jamais rien perdre.
+- **Existant comparable** : Splitti (un « monde / chez-soi » qui se construit avec les tâches finies), Finch (animal virtuel à soigner en faisant ses tâches), Habitica (jeu de rôle). L'idée tient donc la route.
+- **Autres univers possibles** :
+  - 🌱 **Jardin** : chaque tâche fait pousser une plante ; une tâche difficile = une fleur rare. Apaisant, cohérent avec le galet pêche du logo.
+  - 🐾 **Compagnon** : un petit animal qui grandit et gagne des accessoires. Règle impérative : **ne jamais le rendre triste ou malade** si on ne fait rien (culpabilité).
+  - 🗺️ **Voyage** : chaque tâche fait avancer sur une carte et découvrir un nouveau lieu.
+  - 🎁 **Surprises à collectionner** (cartes, autocollants) : récompense parfois inattendue, particulièrement motivante avec un TDAH.
+  - **Au choix de la personne** : les mêmes points achètent des éléments pour la maison OU le jardin, etc.
+- **Pièges à éviter (spécifiques TDAH)** :
+  - **On ne perd jamais rien** : pas de maison qui se dégrade, pas de points retirés.
+  - **Pas de séries (« streaks ») ni de classement** : un jour manqué → honte → abandon de l'appli.
+  - **L'effet de nouveauté s'use** (constaté chez Joon au bout de 4 à 8 semaines) → ajouter régulièrement des objets nouveaux (de saison).
+  - **Récompenser ce qui coûte vraiment** : démarrer une tâche, cocher une étape, faire une tâche peu agréable ou importante (case ②) rapporte plus qu'une tâche facile.
+  - **Points pour les tâches faites, pas créées** (sinon on ajoute des tâches bidon) ; plafond quotidien éventuel.
+  - **Désactivable** dans ⚙️ : certains adultes trouveront ça infantilisant.
+- **Faisabilité** : code simple, tout sur le téléphone (nouveau fichier `js/jeu.js`, réglages dans `js/config.js`). Le vrai travail est **le dessin** des éléments → démarrer avec des émojis pour tester l'idée auprès des psychologues, puis faire dessiner un vrai univers si elle plaît.
+- Si retenue : choisir l'univers avec Learnhavior ; plan en 5 points.
+
+### Idée possible n° 3 — Nom et adresse de l'appli (24/11)
+- **Nom envisagé (pas définitif)** : « TDA(H) - Tout Dans l'Appli (Hyperfocus !) ». Pistes écartées pour l'instant : « Tout Dans l'Agenda » (« agenda » fait penser à un calendrier), « (Hyperattention !) » (peut sonner comme l'injonction « Fais attention ! »). **Avis des psychologues à demander.** Le nom est centralisé dans `TDA.config.NOM`.
+- **Nom court sous l'icône** (≈ 12 caractères visibles) : « TDA(H) » par défaut.
+- **Version discrète au choix** (nom court « Hyperfocus ! », sans TDA(H)) : sur iPhone, la personne peut déjà renommer l'icône au moment de l'ajout ; pour Android web, un 2ᵉ manifeste (`manifest-discret.json`, `id` différent) choisi avant l'installation ; impossible dans les stores (un seul nom). À vérifier sur un vrai téléphone.
+- **Ne pas renommer le dépôt GitHub** : GitHub ne redirige pas l'adresse GitHub Pages après un renommage (applis installées et abonnements cassés). Solution recommandée par GitHub : **un nom de domaine à soi** (≈ 10 €/an), neutre (indépendant du nom final), pris avant d'élargir les tests et avant la phase 4. Ce déménagement unique demandera Exporter/Importer (surtout iPhone) et la réactivation des rappels.
+
 ## À valider avec Learnhavior (3 psychologues, dont Sandra)
-_Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artifact/NfwuV8XGJ5onk4R1PxPnoB_
+_Envoi prévu le 25/11 : mail avec les questions + `learnhavior/TDA-questions-Learnhavior.xlsx` (22 questions, une colonne par psychologue) + `learnhavior/TDA-presentation-Learnhavior.pdf` (6 pages, captures, fait/testé, idées), dans le dossier local du projet. Remplace l'ancien tableau en ligne (https://claude.ai/artifact/NfwuV8XGJ5onk4R1PxPnoB)._
 - Le logo (τ dans un galet pêche, dans le style Psy'Havior / Learn'Havior) : leur accord pour reprendre ce code visuel ; couleurs de l'interface passées aux tons pêche (`tda-v20`) : à confirmer.
 - Le rappel de sauvegarde : fréquence (14 jours) et formulation, pour ne pas culpabiliser.
 - Phase 3 — récupération d'un compte chiffré (mot de passe ET e-mail perdus) : quels moyens proposer, sachant que ce public perd facilement les codes ? Code de récupération à l'inscription, clé dans le fichier de sauvegarde, autre appareil connecté, contact de confiance (proche, aidant), ou plusieurs cumulés.
@@ -76,11 +115,16 @@ _Tableau à remplir par Learnhavior (mêmes questions) : https://claude.ai/artif
 - « Nouveau » : la durée (48 h) et son poids faible (+3).
 - « Pas maintenant » (60 min) : faut-il limiter les reports ?
 - La case ④ : proposer activement de la supprimer ?
-- Relancer un rappel quand la tâche n'est toujours pas faite ?
+- Relancer un rappel quand la tâche n'est toujours pas faite ? Si oui, combien de relances au maximum et à quel intervalle (piste : 2 ou 3, puis silence) ?
+- Comment montrer une tâche en retard sans culpabiliser ?
+- Boîte « À trier » (noter vite, trier plus tard) : utile ? Contredit-elle le rappel obligatoire, ou rappel automatique « trier ma boîte » ?
 - Tâches récurrentes : affichage 30 min avant le rappel, est-ce le bon délai ? Faut-il signaler les prises de médicament oubliées (aujourd'hui on passe simplement à la suivante, sans compter les oublis) ?
 - Les modèles de l'assistant : la liste convient-elle ? D'autres à ajouter (rendez-vous de suivi, routine du matin / du soir, pause, s'hydrater…) ?
 - Médicament : une tâche par prise (« Prendre X (1/3 · 8h) »). Est-ce lisible, ou vaut-il mieux une seule tâche avec plusieurs heures ?
 - Imposer le découpage en étapes au-delà d'une certaine durée ?
+- Idée voix : la dictée et la lecture à voix haute sont-elles prioritaires pour leur public ? Lecture seulement à la demande (bouton 🔊), ou aussi automatique (ex. à l'arrivée d'un rappel, appli ouverte) ?
+- Idée jeu : quel univers (chez-soi, jardin, compagnon, voyage, collection) ? Risque d'infantiliser ou de culpabiliser ? Récompenser davantage le fait de démarrer une tâche que de la finir ?
+- Idée nom : « Tout Dans l'Appli (Hyperfocus !) » leur convient-il ? Le sigle « TDA(H) » sous l'icône pose-t-il un problème de discrétion ?
 - Test iPhone : qui a un iPhone parmi elles, et l'identifiant Apple (e-mail) de chacune pour l'invitation TestFlight.
 
 ## Phases suivantes
